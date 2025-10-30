@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Play, RefreshCw, Sparkles } from "lucide-react";
@@ -9,6 +9,15 @@ const RandomMessagePlayer = () => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState<string>("");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (a) {
+      a.muted = false;
+      a.volume = 1;
+    }
+  }, [audioUrl]);
 
   const fetchRandomMessage = async () => {
     setLoading(true);
@@ -77,7 +86,28 @@ const RandomMessagePlayer = () => {
                 <p className="text-sm text-muted-foreground">From</p>
                 <p className="text-lg font-semibold text-primary">{username}</p>
               </div>
-              <audio src={audioUrl} controls className="w-full rounded-xl" crossOrigin="anonymous" preload="metadata" onError={() => toast.error("Playback failed. Your browser may not support this audio format. Try a different browser.")} />
+              <audio
+                ref={audioRef}
+                src={audioUrl ?? undefined}
+                controls
+                className="w-full rounded-xl"
+                crossOrigin="anonymous"
+                preload="metadata"
+                playsInline
+                muted={false}
+                onPlay={() => {
+                  const a = audioRef.current;
+                  if (a) {
+                    a.muted = false;
+                    a.volume = 1;
+                  }
+                }}
+                onError={() =>
+                  toast.error(
+                    "Playback failed. Your browser may not support this audio format. Try a different browser."
+                  )
+                }
+              />
               <Button
                 onClick={fetchRandomMessage}
                 disabled={loading}
