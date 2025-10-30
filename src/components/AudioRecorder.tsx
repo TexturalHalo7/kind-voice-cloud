@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mic, Square, Upload } from "lucide-react";
+import { Mic, Square, Upload, Volume2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
 
 interface AudioRecorderProps {
   userId: string;
@@ -17,10 +18,57 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [fileExt, setFileExt] = useState<string>("webm");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+  const [meterLevel, setMeterLevel] = useState(0);
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+
+      const track = stream.getAudioTracks()[0];
+      if (!track) {
+        toast.error("No microphone detected.");
+        return;
+      }
+      track.enabled = true;
+      // Safari may expose `muted` on MediaStreamTrack
+      if (track.muted) {
+        toast.warning("Your mic seems muted at system level. Check input settings.");
+      }
+
+      // Setup input level meter
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      const audioCtx: AudioContext = new AudioCtx();
+      audioCtxRef.current = audioCtx;
+      const source = audioCtx.createMediaStreamSource(stream);
+      sourceRef.current = source;
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
+      source.connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const loop = () => {
+        analyser.getByteTimeDomainData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) {
+          const v = (data[i] - 128) / 128;
+          sum += v * v;
+        }
+        const rms = Math.sqrt(sum / data.length);
+        setMeterLevel(rms);
+        rafIdRef.current = requestAnimationFrame(loop);
+      };
+      loop();
+
       const preferredTypes = [
         "audio/mp4",
         "audio/webm;codecs=opus",
@@ -53,6 +101,15 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         const audioBlob = new Blob(audioChunksRef.current, { type: finalType });
         setAudioBlob(audioBlob);
         stream.getTracks().forEach((track) => track.stop());
+        if (rafIdRef.current) {
+          cancelAnimationFrame(rafIdRef.current);
+          rafIdRef.current = null;
+        }
+        try { analyserRef.current?.disconnect(); sourceRef.current?.disconnect(); } catch {}
+        if (audioCtxRef.current) {
+          try { audioCtxRef.current.close(); } catch {}
+          audioCtxRef.current = null;
+        }
       };
 
       mediaRecorder.start();
@@ -137,13 +194,19 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
           )}
 
           {isRecording && (
-            <Button
-              onClick={stopRecording}
-              size="lg"
-              className="w-32 h-32 rounded-full bg-destructive hover:scale-110 transition-all shadow-glow animate-pulse"
-            >
-              <Square className="w-12 h-12" />
-            </Button>
+            <div className="w-full flex flex-col items-center gap-4">
+              <Button
+                onClick={stopRecording}
+                size="lg"
+                className="w-32 h-32 rounded-full bg-destructive hover:scale-110 transition-all shadow-glow animate-pulse"
+              >
+                <Square className="w-12 h-12" />
+              </Button>
+              <div className="w-full">
+                <div className="text-xs text-muted-foreground mb-2 text-center">Input level</div>
+                <Progress value={Math.min(100, Math.max(0, Math.round(meterLevel * 100)))} className="h-2 rounded-full" />
+              </div>
+            </div>
           )}
 
           {audioBlob && !isRecording && (
