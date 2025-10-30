@@ -13,15 +13,35 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [chosenMimeType, setChosenMimeType] = useState<string>("");
+  const [fileExt, setFileExt] = useState<string>("webm");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const preferredTypes = [
+        "audio/mp4",
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/ogg;codecs=opus",
+        "audio/ogg",
+      ];
+      let selectedType = "";
+      const isSupported = (MediaRecorder as any).isTypeSupported?.bind(MediaRecorder);
+      for (const t of preferredTypes) {
+        if (isSupported?.(t)) { selectedType = t; break; }
+      }
+
+      const options: MediaRecorderOptions | undefined = selectedType ? { mimeType: selectedType } : undefined;
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
+
+      const finalType = selectedType || mediaRecorder.mimeType || "audio/webm";
+      setChosenMimeType(finalType);
+      setFileExt(finalType.includes("mp4") ? "m4a" : finalType.includes("ogg") ? "ogg" : "webm");
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -30,7 +50,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const audioBlob = new Blob(audioChunksRef.current, { type: finalType });
         setAudioBlob(audioBlob);
         stream.getTracks().forEach((track) => track.stop());
       };
@@ -57,13 +77,13 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
     setUploading(true);
 
     try {
-      const fileName = `${userId}-${Date.now()}.webm`;
+      const fileName = `${userId}-${Date.now()}.${fileExt}`;
       
       // Upload to storage
       const { error: uploadError } = await supabase.storage
         .from("voice-messages")
         .upload(fileName, audioBlob, {
-          contentType: "audio/webm",
+          contentType: chosenMimeType || "audio/webm",
           upsert: false,
         });
 

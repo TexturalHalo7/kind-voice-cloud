@@ -77,7 +77,7 @@ const RandomMessagePlayer = () => {
                 <p className="text-sm text-muted-foreground">From</p>
                 <p className="text-lg font-semibold text-primary">{username}</p>
               </div>
-              <audio src={audioUrl} controls className="w-full rounded-xl" />
+              <audio src={audioUrl} controls className="w-full rounded-xl" crossOrigin="anonymous" preload="metadata" onError={() => toast.error("Playback failed. Your browser may not support this audio format. Try a different browser.")} />
               <Button
                 onClick={fetchRandomMessage}
                 disabled={loading}
