@@ -77,7 +77,7 @@ const RandomMessagePlayer = () => {
                 <p className="text-sm text-muted-foreground">From</p>
                 <p className="text-lg font-semibold text-primary">{username}</p>
               </div>
-              <audio src={audioUrl} controls autoPlay className="w-full rounded-xl" />
+              <audio src={audioUrl} controls className="w-full rounded-xl" />
               <Button
                 onClick={fetchRandomMessage}
                 disabled={loading}
