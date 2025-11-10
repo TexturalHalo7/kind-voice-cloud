@@ -1,10 +1,12 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mic, Square, Upload, Volume2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Mic, Square, Upload, Volume2, Music } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { generateBackgroundMusic, mixAudioFiles } from "@/lib/backgroundMusic";
 
 interface AudioRecorderProps {
   userId: string;
@@ -16,6 +18,8 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [uploading, setUploading] = useState(false);
   const [chosenMimeType, setChosenMimeType] = useState<string>("");
   const [fileExt, setFileExt] = useState<string>("webm");
+  const [backgroundMusic, setBackgroundMusic] = useState<'none' | 'gentle-waves' | 'soft-hum' | 'peaceful-chimes'>('none');
+  const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -114,6 +118,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
 
       mediaRecorder.start();
       setIsRecording(true);
+      setRecordingStartTime(Date.now());
       toast.info("Recording started! Speak from your heart 💖");
     } catch (error) {
       toast.error("Could not access microphone. Please grant permission.");
@@ -134,13 +139,25 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
     setUploading(true);
 
     try {
-      const fileName = `${userId}-${Date.now()}.${fileExt}`;
+      let finalBlob = audioBlob;
+
+      // Mix with background music if selected
+      if (backgroundMusic !== 'none') {
+        toast.info("Adding calming music...");
+        const recordingDuration = (Date.now() - recordingStartTime) / 1000;
+        const bgMusicBlob = await generateBackgroundMusic(recordingDuration, backgroundMusic);
+        if (bgMusicBlob) {
+          finalBlob = await mixAudioFiles(audioBlob, bgMusicBlob, 1.0, 0.25);
+        }
+      }
+
+      const fileName = `${userId}-${Date.now()}.wav`;
       
       // Upload to storage
       const { error: uploadError } = await supabase.storage
         .from("voice-messages")
-        .upload(fileName, audioBlob, {
-          contentType: chosenMimeType || "audio/webm",
+        .upload(fileName, finalBlob, {
+          contentType: "audio/wav",
           upsert: false,
         });
 
@@ -182,6 +199,26 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {!isRecording && !audioBlob && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <Music className="w-4 h-4 text-primary" />
+              Background Music
+            </label>
+            <Select value={backgroundMusic} onValueChange={(v: any) => setBackgroundMusic(v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select background music" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="gentle-waves">Gentle Waves</SelectItem>
+                <SelectItem value="soft-hum">Soft Hum</SelectItem>
+                <SelectItem value="peaceful-chimes">Peaceful Chimes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
         <div className="flex flex-col items-center gap-4 py-6">
           {!isRecording && !audioBlob && (
             <Button
