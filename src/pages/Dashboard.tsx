@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Heart, LogOut, Sparkles } from "lucide-react";
+import { Heart, LogOut, Sparkles, Star } from "lucide-react";
 import AudioRecorder from "@/components/AudioRecorder";
 import RandomMessagePlayer from "@/components/RandomMessagePlayer";
 import Leaderboard from "@/components/Leaderboard";
@@ -59,6 +59,19 @@ const Dashboard = () => {
     navigate("/auth");
   };
 
+  const getBadge = (count: number) => {
+    if (count >= 250) {
+      return { stars: 1, color: "text-yellow-400", label: "Gold Star" };
+    } else if (count >= 100) {
+      return { stars: 2, color: "text-white", label: "2 Stars" };
+    } else if (count >= 50) {
+      return { stars: 1, color: "text-white", label: "1 Star" };
+    }
+    return null;
+  };
+
+  const badge = getBadge(profile?.message_count || 0);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-hero">
@@ -78,7 +91,16 @@ const Dashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             <div className="text-white/90 text-sm">
-              <span className="font-semibold">{profile?.username}</span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">{profile?.username}</span>
+                {badge && (
+                  <div className="flex items-center gap-0.5" title={badge.label}>
+                    {Array.from({ length: badge.stars }).map((_, i) => (
+                      <Star key={i} className={`w-4 h-4 ${badge.color}`} fill="currentColor" />
+                    ))}
+                  </div>
+                )}
+              </div>
               <p className="text-xs text-white/70">
                 {profile?.message_count || 0} messages shared
               </p>
