@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           id: string
           message_count: number
+          monthly_message_count: number
           updated_at: string
           user_id: string
           username: string
@@ -27,6 +28,7 @@ export type Database = {
           created_at?: string
           id?: string
           message_count?: number
+          monthly_message_count?: number
           updated_at?: string
           user_id: string
           username: string
@@ -35,6 +37,7 @@ export type Database = {
           created_at?: string
           id?: string
           message_count?: number
+          monthly_message_count?: number
           updated_at?: string
           user_id?: string
           username?: string
@@ -78,7 +81,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      reset_monthly_message_counts: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
