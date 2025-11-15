@@ -1,7 +1,7 @@
 // Generate calming background music tones using Web Audio API
 export const generateBackgroundMusic = async (
   durationSeconds: number,
-  type: 'none' | 'gentle-waves' | 'soft-hum' | 'peaceful-chimes'
+  type: 'none' | 'gentle-waves' | 'soft-hum' | 'peaceful-chimes' | 'nature-sounds'
 ): Promise<Blob | null> => {
   if (type === 'none') return null;
 
@@ -54,6 +54,37 @@ export const generateBackgroundMusic = async (
               sample += Math.sin(2 * Math.PI * 659.25 * timeSinceChime) * envelope * 0.02; // E5
             }
           }
+          
+          channelData[i] = sample;
+        }
+        break;
+      }
+      case 'nature-sounds': {
+        // Nature sounds with birds, wind, and rustling
+        for (let i = 0; i < channelData.length; i++) {
+          const t = i / sampleRate;
+          let sample = 0;
+          
+          // Wind (low frequency noise)
+          const windFreq = 80 + Math.sin(2 * Math.PI * 0.1 * t) * 20;
+          sample += Math.sin(2 * Math.PI * windFreq * t) * 0.02;
+          
+          // Bird chirps at random intervals
+          const birdInterval = 4; // seconds between bird sounds
+          const numBirds = Math.floor(durationSeconds / birdInterval);
+          
+          for (let b = 0; b < numBirds; b++) {
+            const birdTime = b * birdInterval + (channel * 0.3); // Slight stereo offset
+            if (t >= birdTime && t < birdTime + 0.5) {
+              const timeSinceBird = t - birdTime;
+              const chirpEnv = Math.exp(-timeSinceBird * 8);
+              const chirpFreq = 2000 + Math.sin(timeSinceBird * 100) * 500;
+              sample += Math.sin(2 * Math.PI * chirpFreq * timeSinceBird) * chirpEnv * 0.04;
+            }
+          }
+          
+          // Rustling (higher frequency subtle noise)
+          sample += (Math.random() - 0.5) * 0.015;
           
           channelData[i] = sample;
         }

@@ -18,8 +18,10 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [uploading, setUploading] = useState(false);
   const [chosenMimeType, setChosenMimeType] = useState<string>("");
   const [fileExt, setFileExt] = useState<string>("webm");
-  const [backgroundMusic, setBackgroundMusic] = useState<'none' | 'gentle-waves' | 'soft-hum' | 'peaceful-chimes'>('none');
+  const [backgroundMusic, setBackgroundMusic] = useState<'none' | 'gentle-waves' | 'soft-hum' | 'peaceful-chimes' | 'nature-sounds'>('none');
   const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
+  const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
+  const [mixingAudio, setMixingAudio] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -101,7 +103,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         }
       };
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: finalType });
         setAudioBlob(audioBlob);
         stream.getTracks().forEach((track) => track.stop());
@@ -113,6 +115,28 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         if (audioCtxRef.current) {
           try { audioCtxRef.current.close(); } catch {}
           audioCtxRef.current = null;
+        }
+
+        // Mix with background music immediately for preview
+        if (backgroundMusic !== 'none') {
+          setMixingAudio(true);
+          try {
+            const recordingDuration = (Date.now() - recordingStartTime) / 1000;
+            const bgMusicBlob = await generateBackgroundMusic(recordingDuration, backgroundMusic);
+            if (bgMusicBlob) {
+              const mixed = await mixAudioFiles(audioBlob, bgMusicBlob, 1.0, 0.25);
+              setPreviewBlob(mixed);
+            } else {
+              setPreviewBlob(audioBlob);
+            }
+          } catch (error) {
+            toast.error("Failed to add background music");
+            setPreviewBlob(audioBlob);
+          } finally {
+            setMixingAudio(false);
+          }
+        } else {
+          setPreviewBlob(audioBlob);
         }
       };
 
@@ -129,28 +153,24 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      toast.success("Recording complete! Ready to share your message.");
+      if (backgroundMusic !== 'none') {
+        toast.info("Processing audio with background music...");
+      } else {
+        toast.success("Recording complete! Ready to share your message.");
+      }
     }
   };
 
   const uploadRecording = async () => {
-    if (!audioBlob || !userId) return;
+    if (!userId) return;
+    
+    // Use the preview blob (already mixed) or the original audio blob
+    const finalBlob = previewBlob || audioBlob;
+    if (!finalBlob) return;
 
     setUploading(true);
 
     try {
-      let finalBlob = audioBlob;
-
-      // Mix with background music if selected
-      if (backgroundMusic !== 'none') {
-        toast.info("Adding calming music...");
-        const recordingDuration = (Date.now() - recordingStartTime) / 1000;
-        const bgMusicBlob = await generateBackgroundMusic(recordingDuration, backgroundMusic);
-        if (bgMusicBlob) {
-          finalBlob = await mixAudioFiles(audioBlob, bgMusicBlob, 1.0, 0.25);
-        }
-      }
-
       const fileName = `${userId}-${Date.now()}.wav`;
       
       // Upload to storage
@@ -180,6 +200,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
 
       toast.success("Your message of kindness has been shared! 🎉");
       setAudioBlob(null);
+      setPreviewBlob(null);
     } catch (error: any) {
       toast.error("Failed to upload message: " + error.message);
     } finally {
@@ -214,6 +235,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
                 <SelectItem value="gentle-waves">Gentle Waves</SelectItem>
                 <SelectItem value="soft-hum">Soft Hum</SelectItem>
                 <SelectItem value="peaceful-chimes">Peaceful Chimes</SelectItem>
+                <SelectItem value="nature-sounds">Nature Sounds</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -248,20 +270,30 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
 
           {audioBlob && !isRecording && (
             <div className="space-y-4 w-full">
-              <audio src={URL.createObjectURL(audioBlob)} controls className="w-full rounded-xl" />
+              {mixingAudio ? (
+                <div className="text-center py-4">
+                  <div className="text-sm text-muted-foreground">Adding background music...</div>
+                </div>
+              ) : (
+                <audio src={previewBlob ? URL.createObjectURL(previewBlob) : URL.createObjectURL(audioBlob)} controls className="w-full rounded-xl" />
+              )}
               <div className="flex gap-3">
                 <Button
                   onClick={uploadRecording}
-                  disabled={uploading}
+                  disabled={uploading || mixingAudio}
                   className="flex-1 bg-gradient-warm hover:opacity-90 rounded-xl shadow-soft"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   {uploading ? "Uploading..." : "Share This Message"}
                 </Button>
                 <Button
-                  onClick={() => setAudioBlob(null)}
+                  onClick={() => {
+                    setAudioBlob(null);
+                    setPreviewBlob(null);
+                  }}
                   variant="outline"
                   className="rounded-xl"
+                  disabled={mixingAudio}
                 >
                   Discard
                 </Button>
@@ -273,7 +305,11 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
             {isRecording
               ? "🔴 Recording... Click stop when done"
               : audioBlob
-              ? "Listen to your message and share it!"
+              ? mixingAudio
+                ? "Processing your audio..."
+                : backgroundMusic !== 'none'
+                ? "Listen to your message with background music!"
+                : "Listen to your message and share it!"
               : "Click the mic to start recording"}
           </p>
         </div>
