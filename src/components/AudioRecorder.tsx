@@ -22,6 +22,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [mixingAudio, setMixingAudio] = useState(false);
+  const [hasAudioActivity, setHasAudioActivity] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -71,6 +72,12 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         }
         const rms = Math.sqrt(sum / data.length);
         setMeterLevel(rms);
+        
+        // Track if there's meaningful audio activity (above threshold)
+        if (rms > 0.02) {
+          setHasAudioActivity(true);
+        }
+        
         rafIdRef.current = requestAnimationFrame(loop);
       };
       loop();
@@ -143,6 +150,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingStartTime(Date.now());
+      setHasAudioActivity(false); // Reset audio activity tracking
       toast.info("Recording started! Speak from your heart 💖");
     } catch (error) {
       toast.error("Could not access microphone. Please grant permission.");
@@ -168,9 +176,50 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
     const finalBlob = previewBlob || audioBlob;
     if (!finalBlob) return;
 
+    // Check if there was any audio activity during recording
+    if (!hasAudioActivity) {
+      toast.error("No speech detected in your recording. Please speak into the microphone.");
+      return;
+    }
+
     setUploading(true);
 
     try {
+      // Convert audio blob to base64 for moderation
+      const reader = new FileReader();
+      reader.readAsDataURL(finalBlob);
+      
+      await new Promise((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+      });
+
+      const base64Audio = (reader.result as string).split(',')[1];
+
+      // Check content moderation
+      toast.info("Checking your message...");
+      
+      const { data: moderationData, error: moderationError } = await supabase.functions.invoke(
+        'moderate-voice',
+        {
+          body: { audio: base64Audio }
+        }
+      );
+
+      if (moderationError) {
+        console.error('Moderation error:', moderationError);
+        throw new Error('Failed to moderate content');
+      }
+
+      console.log('Moderation result:', moderationData);
+
+      if (!moderationData.isAppropriate) {
+        toast.error(moderationData.reason || 'Your message does not meet our kindness guidelines.');
+        setUploading(false);
+        return;
+      }
+
+      // If moderation passed, proceed with upload
       const fileName = `${userId}-${Date.now()}.wav`;
       
       // Upload to storage
