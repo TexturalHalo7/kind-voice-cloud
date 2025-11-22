@@ -208,7 +208,18 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
 
       if (moderationError) {
         console.error('Moderation error:', moderationError);
-        throw new Error('Failed to moderate content');
+        const rawMessage = String(moderationError.message || '');
+
+        if (rawMessage.includes('insufficient_quota') || rawMessage.includes('You exceeded your current quota')) {
+          toast.error(
+            "Our speech service is temporarily unavailable because the transcription quota was exceeded. Your message wasn't saved; please try again later."
+          );
+        } else {
+          toast.error("We couldn't process your message right now. Please try again in a moment.");
+        }
+
+        setUploading(false);
+        return;
       }
 
       console.log('Moderation result:', moderationData);
