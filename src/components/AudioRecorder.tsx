@@ -185,52 +185,8 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
     setUploading(true);
 
     try {
-      // Convert audio blob to base64 for moderation
-      const reader = new FileReader();
-      reader.readAsDataURL(finalBlob);
+      toast.info("Uploading your message...");
       
-      await new Promise((resolve, reject) => {
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-      });
-
-      const base64Audio = (reader.result as string).split(',')[1];
-
-      // Check content moderation
-      toast.info("Checking your message...");
-      
-      const { data: moderationData, error: moderationError } = await supabase.functions.invoke(
-        'moderate-voice',
-        {
-          body: { audio: base64Audio }
-        }
-      );
-
-      if (moderationError) {
-        console.error('Moderation error:', moderationError);
-        const rawMessage = String(moderationError.message || '');
-
-        if (rawMessage.includes('insufficient_quota') || rawMessage.includes('You exceeded your current quota')) {
-          toast.error(
-            "Our speech service is temporarily unavailable because the transcription quota was exceeded. Your message wasn't saved; please try again later."
-          );
-        } else {
-          toast.error("We couldn't process your message right now. Please try again in a moment.");
-        }
-
-        setUploading(false);
-        return;
-      }
-
-      console.log('Moderation result:', moderationData);
-
-      if (!moderationData.isAppropriate) {
-        toast.error(moderationData.reason || 'Your message does not meet our kindness guidelines.');
-        setUploading(false);
-        return;
-      }
-
-      // If moderation passed, proceed with upload
       const fileName = `${userId}-${Date.now()}.wav`;
       
       // Upload to storage
