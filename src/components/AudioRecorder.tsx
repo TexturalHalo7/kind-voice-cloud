@@ -185,8 +185,43 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
     setUploading(true);
 
     try {
-      toast.info("Uploading your message...");
+      // Convert audio blob to base64 for moderation
+      const reader = new FileReader();
+      reader.readAsDataURL(finalBlob);
       
+      await new Promise((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+      });
+
+      const base64Audio = (reader.result as string).split(',')[1];
+
+      // Check content moderation
+      toast.info("Checking your message for kindness...");
+      
+      const { data: moderationData, error: moderationError } = await supabase.functions.invoke(
+        'moderate-voice',
+        {
+          body: { audio: base64Audio }
+        }
+      );
+
+      if (moderationError) {
+        console.error('Moderation error:', moderationError);
+        toast.error("We couldn't process your message right now. Please try again in a moment.");
+        setUploading(false);
+        return;
+      }
+
+      console.log('Moderation result:', moderationData);
+
+      if (!moderationData.isAppropriate) {
+        toast.error(moderationData.reason || 'Please share a heartwarming, positive message.');
+        setUploading(false);
+        return;
+      }
+
+      // If moderation passed, proceed with upload
       const fileName = `${userId}-${Date.now()}.wav`;
       
       // Upload to storage

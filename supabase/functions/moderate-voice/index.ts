@@ -48,26 +48,29 @@ serve(async (req) => {
       throw new Error('No audio data provided');
     }
 
-    console.log('Starting transcription...');
+    console.log('Starting transcription with Lovable AI...');
 
-    // Process audio in chunks and transcribe
+    // Process audio in chunks
     const binaryAudio = processBase64Chunks(audio);
-    const formData = new FormData();
-    const blob = new Blob([binaryAudio], { type: 'audio/wav' });
-    formData.append('file', blob, 'audio.wav');
-    formData.append('model', 'whisper-1');
-
-    const transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    
+    // Use Lovable AI for transcription (supports audio input)
+    const transcriptionResponse = await fetch('https://ai.gateway.lovable.dev/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
       },
-      body: formData,
+      body: (() => {
+        const formData = new FormData();
+        const blob = new Blob([binaryAudio], { type: 'audio/wav' });
+        formData.append('file', blob, 'audio.wav');
+        formData.append('model', 'whisper-1');
+        return formData;
+      })(),
     });
 
     if (!transcriptionResponse.ok) {
       const errorText = await transcriptionResponse.text();
-      console.error('OpenAI transcription error:', errorText);
+      console.error('Lovable AI transcription error:', errorText);
       throw new Error(`Transcription failed: ${errorText}`);
     }
 
