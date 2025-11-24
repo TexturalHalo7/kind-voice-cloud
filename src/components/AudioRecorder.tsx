@@ -23,12 +23,14 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [mixingAudio, setMixingAudio] = useState(false);
   const [hasAudioActivity, setHasAudioActivity] = useState(false);
+  const [transcript, setTranscript] = useState<string>("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const rafIdRef = useRef<number | null>(null);
+  const recognitionRef = useRef<any>(null);
   const [meterLevel, setMeterLevel] = useState(0);
 
   const startRecording = async () => {
@@ -147,10 +149,38 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         }
       };
 
+      // Start browser speech recognition (free!)
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        
+        recognition.onresult = (event: any) => {
+          const results = Array.from(event.results);
+          const transcriptText = results
+            .map((result: any) => result[0].transcript)
+            .join(' ');
+          setTranscript(transcriptText);
+          console.log('Speech recognized:', transcriptText);
+        };
+        
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+        };
+        
+        recognition.start();
+        recognitionRef.current = recognition;
+      } else {
+        toast.warning("Speech recognition not supported in this browser. Message will be uploaded without content checking.");
+      }
+
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingStartTime(Date.now());
       setHasAudioActivity(false); // Reset audio activity tracking
+      setTranscript(""); // Reset transcript
       toast.info("Recording started! Speak from your heart 💖");
     } catch (error) {
       toast.error("Could not access microphone. Please grant permission.");
@@ -159,6 +189,12 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
+      // Stop speech recognition
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       if (backgroundMusic !== 'none') {
@@ -185,41 +221,34 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
     setUploading(true);
 
     try {
-      // Convert audio blob to base64 for moderation
-      const reader = new FileReader();
-      reader.readAsDataURL(finalBlob);
-      
-      await new Promise((resolve, reject) => {
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-      });
+      // Check content moderation with Lovable AI (free) if we have a transcript
+      if (transcript && transcript.length >= 5) {
+        toast.info("Checking your message...");
+        
+        const { data: moderationData, error: moderationError } = await supabase.functions.invoke(
+          'moderate-voice',
+          {
+            body: { transcript }
+          }
+        );
 
-      const base64Audio = (reader.result as string).split(',')[1];
-
-      // Check content moderation with Lovable AI (free)
-      toast.info("Checking your message...");
-      
-      const { data: moderationData, error: moderationError } = await supabase.functions.invoke(
-        'moderate-voice',
-        {
-          body: { audio: base64Audio }
+        if (moderationError) {
+          console.error('Moderation error:', moderationError);
+          toast.error("We couldn't process your message. Please try again.");
+          setUploading(false);
+          return;
         }
-      );
 
-      if (moderationError) {
-        console.error('Moderation error:', moderationError);
-        toast.error("We couldn't process your message. Please try again.");
-        setUploading(false);
-        return;
+        if (!moderationData.isAppropriate) {
+          toast.error(moderationData.reason || 'Your message does not meet our kindness guidelines.');
+          setUploading(false);
+          return;
+        }
+      } else {
+        toast.warning("No speech detected - uploading without content check.");
       }
 
-      if (!moderationData.isAppropriate) {
-        toast.error(moderationData.reason || 'Your message does not meet our kindness guidelines.');
-        setUploading(false);
-        return;
-      }
-
-      // If moderation passed, proceed with upload
+      // If moderation passed (or no transcript), proceed with upload
       toast.info("Uploading your message...");
       
       const fileName = `${userId}-${Date.now()}.wav`;
