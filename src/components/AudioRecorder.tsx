@@ -24,6 +24,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [mixingAudio, setMixingAudio] = useState(false);
   const [hasAudioActivity, setHasAudioActivity] = useState(false);
   const [transcript, setTranscript] = useState<string>("");
+  const [language, setLanguage] = useState<string>('en-US');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -155,7 +156,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = false;
-        recognition.lang = 'en-US';
+        recognition.lang = language;
         
         recognition.onresult = (event: any) => {
           const results = Array.from(event.results);
@@ -301,23 +302,59 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
       </CardHeader>
       <CardContent className="space-y-4">
         {!isRecording && !audioBlob && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium flex items-center gap-2">
-              <Music className="w-4 h-4 text-primary" />
-              Background Music
-            </label>
-            <Select value={backgroundMusic} onValueChange={(v: any) => setBackgroundMusic(v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select background music" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                <SelectItem value="gentle-waves">Gentle Waves</SelectItem>
-                <SelectItem value="soft-hum">Soft Hum</SelectItem>
-                <SelectItem value="peaceful-chimes">Peaceful Chimes</SelectItem>
-                <SelectItem value="nature-sounds">Nature Sounds</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Music className="w-4 h-4 text-primary" />
+                Background Music
+              </label>
+              <Select value={backgroundMusic} onValueChange={(v: any) => setBackgroundMusic(v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select background music" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="gentle-waves">Gentle Waves</SelectItem>
+                  <SelectItem value="soft-hum">Soft Hum</SelectItem>
+                  <SelectItem value="peaceful-chimes">Peaceful Chimes</SelectItem>
+                  <SelectItem value="nature-sounds">Nature Sounds</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Volume2 className="w-4 h-4 text-primary" />
+                Language
+              </label>
+              <Select value={language} onValueChange={setLanguage}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="en-US">English (US)</SelectItem>
+                  <SelectItem value="en-GB">English (UK)</SelectItem>
+                  <SelectItem value="es-ES">Spanish (Spain)</SelectItem>
+                  <SelectItem value="es-MX">Spanish (Mexico)</SelectItem>
+                  <SelectItem value="fr-FR">French</SelectItem>
+                  <SelectItem value="de-DE">German</SelectItem>
+                  <SelectItem value="it-IT">Italian</SelectItem>
+                  <SelectItem value="pt-BR">Portuguese (Brazil)</SelectItem>
+                  <SelectItem value="pt-PT">Portuguese (Portugal)</SelectItem>
+                  <SelectItem value="nl-NL">Dutch</SelectItem>
+                  <SelectItem value="ru-RU">Russian</SelectItem>
+                  <SelectItem value="ja-JP">Japanese</SelectItem>
+                  <SelectItem value="ko-KR">Korean</SelectItem>
+                  <SelectItem value="zh-CN">Chinese (Simplified)</SelectItem>
+                  <SelectItem value="zh-TW">Chinese (Traditional)</SelectItem>
+                  <SelectItem value="ar-SA">Arabic</SelectItem>
+                  <SelectItem value="hi-IN">Hindi</SelectItem>
+                  <SelectItem value="tr-TR">Turkish</SelectItem>
+                  <SelectItem value="pl-PL">Polish</SelectItem>
+                  <SelectItem value="sv-SE">Swedish</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         )}
         
