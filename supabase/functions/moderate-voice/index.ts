@@ -88,9 +88,9 @@ serve(async (req) => {
       );
     }
 
-    console.log('Starting content moderation...');
+    console.log('Starting content moderation with Lovable AI...');
 
-    // Use Lovable AI to check for negative content
+    // Use Lovable AI (free with Cloud) to check for negative content
     const moderationResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -117,13 +117,12 @@ Respond with ONLY "INAPPROPRIATE" if the message contains any negative, harmful,
             content: transcript
           }
         ],
-        temperature: 0.3,
       }),
     });
 
     if (!moderationResponse.ok) {
       const errorText = await moderationResponse.text();
-      console.error('AI moderation error:', errorText);
+      console.error('Lovable AI moderation error:', errorText);
       throw new Error(`Moderation failed: ${errorText}`);
     }
 
