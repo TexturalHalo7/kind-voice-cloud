@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mic, Square, Upload, Volume2, Music } from "lucide-react";
+import { Mic, Square, Upload, Music } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
@@ -23,15 +23,12 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [mixingAudio, setMixingAudio] = useState(false);
   const [hasAudioActivity, setHasAudioActivity] = useState(false);
-  const [transcript, setTranscript] = useState<string>("");
-  const [language, setLanguage] = useState<string>('en-US');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const rafIdRef = useRef<number | null>(null);
-  const recognitionRef = useRef<any>(null);
   const [meterLevel, setMeterLevel] = useState(0);
 
   const startRecording = async () => {
@@ -150,38 +147,10 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         }
       };
 
-      // Start browser speech recognition (free!)
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = false;
-        recognition.lang = language;
-        
-        recognition.onresult = (event: any) => {
-          const results = Array.from(event.results);
-          const transcriptText = results
-            .map((result: any) => result[0].transcript)
-            .join(' ');
-          setTranscript(transcriptText);
-          console.log('Speech recognized:', transcriptText);
-        };
-        
-        recognition.onerror = (event: any) => {
-          console.error('Speech recognition error:', event.error);
-        };
-        
-        recognition.start();
-        recognitionRef.current = recognition;
-      } else {
-        toast.warning("Speech recognition not supported in this browser. Message will be uploaded without content checking.");
-      }
-
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingStartTime(Date.now());
       setHasAudioActivity(false); // Reset audio activity tracking
-      setTranscript(""); // Reset transcript
       toast.info("Recording started! Speak from your heart 💖");
     } catch (error) {
       toast.error("Could not access microphone. Please grant permission.");
@@ -190,12 +159,6 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
-      // Stop speech recognition
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-        recognitionRef.current = null;
-      }
-      
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       if (backgroundMusic !== 'none') {
@@ -222,34 +185,6 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
     setUploading(true);
 
     try {
-      // Check content moderation with Lovable AI (free) if we have a transcript
-      if (transcript && transcript.length >= 5) {
-        toast.info("Checking your message...");
-        
-        const { data: moderationData, error: moderationError } = await supabase.functions.invoke(
-          'moderate-voice',
-          {
-            body: { transcript }
-          }
-        );
-
-        if (moderationError) {
-          console.error('Moderation error:', moderationError);
-          toast.error("We couldn't process your message. Please try again.");
-          setUploading(false);
-          return;
-        }
-
-        if (!moderationData.isAppropriate) {
-          toast.error(moderationData.reason || 'Your message does not meet our kindness guidelines.');
-          setUploading(false);
-          return;
-        }
-      } else {
-        toast.warning("No speech detected - uploading without content check.");
-      }
-
-      // If moderation passed (or no transcript), proceed with upload
       toast.info("Uploading your message...");
       
       const fileName = `${userId}-${Date.now()}.wav`;
@@ -302,59 +237,23 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
       </CardHeader>
       <CardContent className="space-y-4">
         {!isRecording && !audioBlob && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium flex items-center gap-2">
-                <Music className="w-4 h-4 text-primary" />
-                Background Music
-              </label>
-              <Select value={backgroundMusic} onValueChange={(v: any) => setBackgroundMusic(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select background music" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="gentle-waves">Gentle Waves</SelectItem>
-                  <SelectItem value="soft-hum">Soft Hum</SelectItem>
-                  <SelectItem value="peaceful-chimes">Peaceful Chimes</SelectItem>
-                  <SelectItem value="nature-sounds">Nature Sounds</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium flex items-center gap-2">
-                <Volume2 className="w-4 h-4 text-primary" />
-                Language
-              </label>
-              <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select language" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  <SelectItem value="en-US">English (US)</SelectItem>
-                  <SelectItem value="en-GB">English (UK)</SelectItem>
-                  <SelectItem value="es-ES">Spanish (Spain)</SelectItem>
-                  <SelectItem value="es-MX">Spanish (Mexico)</SelectItem>
-                  <SelectItem value="fr-FR">French</SelectItem>
-                  <SelectItem value="de-DE">German</SelectItem>
-                  <SelectItem value="it-IT">Italian</SelectItem>
-                  <SelectItem value="pt-BR">Portuguese (Brazil)</SelectItem>
-                  <SelectItem value="pt-PT">Portuguese (Portugal)</SelectItem>
-                  <SelectItem value="nl-NL">Dutch</SelectItem>
-                  <SelectItem value="ru-RU">Russian</SelectItem>
-                  <SelectItem value="ja-JP">Japanese</SelectItem>
-                  <SelectItem value="ko-KR">Korean</SelectItem>
-                  <SelectItem value="zh-CN">Chinese (Simplified)</SelectItem>
-                  <SelectItem value="zh-TW">Chinese (Traditional)</SelectItem>
-                  <SelectItem value="ar-SA">Arabic</SelectItem>
-                  <SelectItem value="hi-IN">Hindi</SelectItem>
-                  <SelectItem value="tr-TR">Turkish</SelectItem>
-                  <SelectItem value="pl-PL">Polish</SelectItem>
-                  <SelectItem value="sv-SE">Swedish</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <Music className="w-4 h-4 text-primary" />
+              Background Music
+            </label>
+            <Select value={backgroundMusic} onValueChange={(v: any) => setBackgroundMusic(v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select background music" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="gentle-waves">Gentle Waves</SelectItem>
+                <SelectItem value="soft-hum">Soft Hum</SelectItem>
+                <SelectItem value="peaceful-chimes">Peaceful Chimes</SelectItem>
+                <SelectItem value="nature-sounds">Nature Sounds</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         )}
         
