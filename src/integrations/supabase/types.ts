@@ -14,12 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          voice_message_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          voice_message_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          voice_message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_voice_message_id_fkey"
+            columns: ["voice_message_id"]
+            isOneToOne: false
+            referencedRelation: "voice_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_thanks: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          voice_message_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          voice_message_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          voice_message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_thanks_voice_message_id_fkey"
+            columns: ["voice_message_id"]
+            isOneToOne: false
+            referencedRelation: "voice_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
           id: string
+          last_message_date: string | null
           message_count: number
           monthly_message_count: number
+          streak_count: number
           updated_at: string
           user_id: string
           username: string
@@ -27,8 +87,10 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          last_message_date?: string | null
           message_count?: number
           monthly_message_count?: number
+          streak_count?: number
           updated_at?: string
           user_id: string
           username: string
@@ -36,8 +98,10 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          last_message_date?: string | null
           message_count?: number
           monthly_message_count?: number
+          streak_count?: number
           updated_at?: string
           user_id?: string
           username?: string
@@ -47,23 +111,29 @@ export type Database = {
       voice_messages: {
         Row: {
           audio_url: string
+          category: string
           created_at: string
           duration_seconds: number | null
           id: string
+          thanks_count: number
           user_id: string
         }
         Insert: {
           audio_url: string
+          category?: string
           created_at?: string
           duration_seconds?: number | null
           id?: string
+          thanks_count?: number
           user_id: string
         }
         Update: {
           audio_url?: string
+          category?: string
           created_at?: string
           duration_seconds?: number | null
           id?: string
+          thanks_count?: number
           user_id?: string
         }
         Relationships: [

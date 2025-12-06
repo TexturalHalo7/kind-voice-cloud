@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Heart, LogOut, Sparkles, Star } from "lucide-react";
+import { Heart, LogOut, Sparkles, Star, User as UserIcon, Flame, BookHeart } from "lucide-react";
 import AudioRecorder from "@/components/AudioRecorder";
 import RandomMessagePlayer from "@/components/RandomMessagePlayer";
 import Leaderboard from "@/components/Leaderboard";
@@ -90,9 +90,22 @@ const Dashboard = () => {
             <h1 className="text-2xl font-bold text-white">Voices of Kindness</h1>
           </div>
           <div className="flex items-center gap-4">
+            {/* Streak Badge */}
+            {profile?.streak_count > 0 && (
+              <div className="flex items-center gap-1 bg-orange-500/20 px-3 py-1 rounded-full" title="Daily Streak">
+                <Flame className="w-4 h-4 text-orange-400" />
+                <span className="text-orange-300 font-semibold text-sm">{profile.streak_count}</span>
+              </div>
+            )}
+            
             <div className="text-white/90 text-sm">
               <div className="flex items-center gap-2">
-                <span className="font-semibold">{profile?.username}</span>
+                <button 
+                  onClick={() => navigate("/profile")}
+                  className="font-semibold hover:underline cursor-pointer"
+                >
+                  {profile?.username}
+                </button>
                 {badge && (
                   <div className="flex items-center gap-0.5" title={badge.label}>
                     {Array.from({ length: badge.stars }).map((_, i) => (
@@ -105,6 +118,27 @@ const Dashboard = () => {
                 {profile?.message_count || 0} messages shared
               </p>
             </div>
+            
+            <Button
+              onClick={() => navigate("/profile")}
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20"
+              title="My Profile"
+            >
+              <UserIcon className="w-5 h-5" />
+            </Button>
+            
+            <Button
+              onClick={() => navigate("/favorites")}
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20"
+              title="My Favorites"
+            >
+              <BookHeart className="w-5 h-5" />
+            </Button>
+            
             <Button
               onClick={handleLogout}
               variant="secondary"
@@ -137,7 +171,7 @@ const Dashboard = () => {
         {/* Main Actions Grid */}
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           <AudioRecorder userId={user?.id || ""} />
-          <RandomMessagePlayer />
+          <RandomMessagePlayer userId={user?.id} />
         </div>
 
         {/* Stats Section */}

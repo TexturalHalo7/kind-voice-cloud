@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mic, Square, Upload, Music } from "lucide-react";
+import { Mic, Square, Upload, Music, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
@@ -12,6 +12,8 @@ interface AudioRecorderProps {
   userId: string;
 }
 
+type MessageCategory = "general" | "encouragement" | "gratitude" | "motivation";
+
 const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -19,6 +21,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [chosenMimeType, setChosenMimeType] = useState<string>("");
   const [fileExt, setFileExt] = useState<string>("webm");
   const [backgroundMusic, setBackgroundMusic] = useState<'none' | 'gentle-waves' | 'soft-hum' | 'peaceful-chimes' | 'nature-sounds'>('none');
+  const [category, setCategory] = useState<MessageCategory>("general");
   const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [mixingAudio, setMixingAudio] = useState(false);
@@ -210,6 +213,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         .insert({
           user_id: userId,
           audio_url: publicUrl,
+          category: category,
         });
 
       if (dbError) throw dbError;
@@ -237,24 +241,43 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
       </CardHeader>
       <CardContent className="space-y-4">
         {!isRecording && !audioBlob && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium flex items-center gap-2">
-              <Music className="w-4 h-4 text-primary" />
-              Background Music
-            </label>
-            <Select value={backgroundMusic} onValueChange={(v: any) => setBackgroundMusic(v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select background music" />
-              </SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="none">None</SelectItem>
-                <SelectItem value="gentle-waves">Gentle Waves</SelectItem>
-                <SelectItem value="soft-hum">Soft Hum</SelectItem>
-                <SelectItem value="peaceful-chimes">Peaceful Chimes</SelectItem>
-                <SelectItem value="nature-sounds">Nature Sounds</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <>
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Tag className="w-4 h-4 text-primary" />
+                Message Category
+              </label>
+              <Select value={category} onValueChange={(v: MessageCategory) => setCategory(v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="general">General Positivity</SelectItem>
+                  <SelectItem value="encouragement">Encouragement</SelectItem>
+                  <SelectItem value="gratitude">Gratitude</SelectItem>
+                  <SelectItem value="motivation">Motivation</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Music className="w-4 h-4 text-primary" />
+                Background Music
+              </label>
+              <Select value={backgroundMusic} onValueChange={(v: any) => setBackgroundMusic(v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select background music" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="gentle-waves">Gentle Waves</SelectItem>
+                  <SelectItem value="soft-hum">Soft Hum</SelectItem>
+                  <SelectItem value="peaceful-chimes">Peaceful Chimes</SelectItem>
+                  <SelectItem value="nature-sounds">Nature Sounds</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </>
         )}
         
         <div className="flex flex-col items-center gap-4 py-6">
