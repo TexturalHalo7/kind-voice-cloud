@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, Flame, Heart, MessageCircle, Save, Star, User as UserIcon } from "lucide-react";
+import { ArrowLeft, Calendar, Flame, Heart, MessageCircle, Save, Star, User as UserIcon, ThumbsUp } from "lucide-react";
 import { format } from "date-fns";
 
 const Profile = () => {
@@ -173,15 +173,22 @@ const Profile = () => {
                 </div>
                 <p className="text-sm text-muted-foreground">Day Streak</p>
               </div>
-              <div className="bg-primary/10 rounded-xl p-4 text-center">
+              <div className="bg-green-500/10 rounded-xl p-4 text-center">
                 <div className="flex items-center justify-center gap-1">
-                  <Calendar className="w-5 h-5 text-primary" />
+                  <ThumbsUp className="w-6 h-6 text-green-500" />
+                  <p className="text-3xl font-bold text-green-500">{profile?.total_thanks_received || 0}</p>
                 </div>
-                <p className="text-sm font-medium text-primary mt-1">
-                  {profile?.created_at ? format(new Date(profile.created_at), "MMM d, yyyy") : "N/A"}
-                </p>
-                <p className="text-sm text-muted-foreground">Joined</p>
+                <p className="text-sm text-muted-foreground">Thanks Received</p>
               </div>
+            </div>
+            <div className="mt-4 bg-primary/10 rounded-xl p-4 text-center">
+              <div className="flex items-center justify-center gap-1">
+                <Calendar className="w-5 h-5 text-primary" />
+              </div>
+              <p className="text-sm font-medium text-primary mt-1">
+                {profile?.created_at ? format(new Date(profile.created_at), "MMM d, yyyy") : "N/A"}
+              </p>
+              <p className="text-sm text-muted-foreground">Joined</p>
             </div>
           </CardContent>
         </Card>

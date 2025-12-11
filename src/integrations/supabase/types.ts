@@ -72,6 +72,47 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          from_user_id: string | null
+          id: string
+          message: string
+          read: boolean
+          related_message_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_user_id?: string | null
+          id?: string
+          message: string
+          read?: boolean
+          related_message_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          from_user_id?: string | null
+          id?: string
+          message?: string
+          read?: boolean
+          related_message_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_related_message_id_fkey"
+            columns: ["related_message_id"]
+            isOneToOne: false
+            referencedRelation: "voice_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -80,6 +121,7 @@ export type Database = {
           message_count: number
           monthly_message_count: number
           streak_count: number
+          total_thanks_received: number
           updated_at: string
           user_id: string
           username: string
@@ -91,6 +133,7 @@ export type Database = {
           message_count?: number
           monthly_message_count?: number
           streak_count?: number
+          total_thanks_received?: number
           updated_at?: string
           user_id: string
           username: string
@@ -102,6 +145,7 @@ export type Database = {
           message_count?: number
           monthly_message_count?: number
           streak_count?: number
+          total_thanks_received?: number
           updated_at?: string
           user_id?: string
           username?: string
