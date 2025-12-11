@@ -9,6 +9,7 @@ import AudioRecorder from "@/components/AudioRecorder";
 import RandomMessagePlayer from "@/components/RandomMessagePlayer";
 import Leaderboard from "@/components/Leaderboard";
 import GlobalCounter from "@/components/GlobalCounter";
+import NotificationBell from "@/components/NotificationBell";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -128,6 +129,8 @@ const Dashboard = () => {
             >
               <UserIcon className="w-5 h-5" />
             </Button>
+            
+            {user && <NotificationBell userId={user.id} />}
             
             <Button
               onClick={() => navigate("/favorites")}
