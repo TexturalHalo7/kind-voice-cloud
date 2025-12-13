@@ -323,19 +323,43 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
           )}
 
           {audioBlob && !isRecording && (
-            <div className="space-y-4 w-full">
+            <div className="space-y-5 w-full">
               {mixingAudio ? (
-                <div className="text-center py-4">
+                <div className="flex flex-col items-center gap-3 py-6">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center animate-pulse">
+                    <Music className="w-8 h-8 text-primary animate-bounce" />
+                  </div>
                   <div className="text-sm text-muted-foreground">Adding background music...</div>
                 </div>
               ) : (
-                <audio src={previewBlob ? URL.createObjectURL(previewBlob) : URL.createObjectURL(audioBlob)} controls className="w-full rounded-xl" />
+                <div className="relative p-4 rounded-2xl bg-gradient-to-br from-primary/5 via-accent/5 to-secondary/5 border border-primary/10 shadow-lg">
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/5 via-transparent to-accent/5 opacity-50" />
+                  <div className="relative flex items-center gap-4">
+                    <div className="flex-shrink-0 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
+                      <Mic className="w-7 h-7 text-primary-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-foreground mb-1">Your Recording</div>
+                      <audio 
+                        src={previewBlob ? URL.createObjectURL(previewBlob) : URL.createObjectURL(audioBlob)} 
+                        controls 
+                        className="w-full h-10 rounded-lg [&::-webkit-media-controls-panel]:bg-background/80 [&::-webkit-media-controls-panel]:rounded-lg" 
+                      />
+                    </div>
+                  </div>
+                  {backgroundMusic !== 'none' && (
+                    <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                      <Music className="w-3 h-3" />
+                      <span>Enhanced with {backgroundMusic.replace('-', ' ')}</span>
+                    </div>
+                  )}
+                </div>
               )}
               <div className="flex gap-3">
                 <Button
                   onClick={uploadRecording}
                   disabled={uploading || mixingAudio}
-                  className="flex-1 bg-gradient-warm hover:opacity-90 rounded-xl shadow-soft"
+                  className="flex-1 bg-gradient-to-r from-primary via-accent to-secondary hover:opacity-90 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   {uploading ? "Uploading..." : "Share This Message"}
@@ -346,7 +370,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
                     setPreviewBlob(null);
                   }}
                   variant="outline"
-                  className="rounded-xl"
+                  className="rounded-xl border-2 hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive transition-all duration-300"
                   disabled={mixingAudio}
                 >
                   Discard
