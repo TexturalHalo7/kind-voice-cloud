@@ -283,14 +283,13 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         <div className="flex flex-col items-center gap-4 py-6">
           {!isRecording && !audioBlob && (
             <div className="relative group">
-              {/* Outer animated rings */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-accent to-primary opacity-60 blur-xl group-hover:blur-2xl transition-all duration-500 animate-pulse" />
-              <div className="absolute inset-2 rounded-full bg-gradient-to-r from-accent via-primary to-accent opacity-40 blur-lg animate-pulse" style={{ animationDelay: '0.5s' }} />
+              {/* Subtle glow on hover only */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-accent to-primary opacity-0 group-hover:opacity-40 blur-xl transition-all duration-500" />
               
               <Button
                 onClick={startRecording}
                 size="lg"
-                className="relative w-36 h-36 rounded-full bg-gradient-to-br from-primary via-primary/90 to-accent hover:scale-110 transition-all duration-300 shadow-[0_0_40px_rgba(var(--primary),0.4)] hover:shadow-[0_0_60px_rgba(var(--primary),0.6)] border-4 border-white/20"
+                className="relative w-36 h-36 rounded-full bg-gradient-to-br from-primary via-primary/90 to-accent hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-[0_0_40px_hsl(var(--primary)/0.4)] border-4 border-white/20"
               >
                 <div className="absolute inset-0 rounded-full bg-gradient-to-t from-white/0 via-white/10 to-white/30" />
                 <Mic className="w-14 h-14 drop-shadow-lg relative z-10" />
