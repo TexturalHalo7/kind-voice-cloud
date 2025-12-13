@@ -282,24 +282,39 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         
         <div className="flex flex-col items-center gap-4 py-6">
           {!isRecording && !audioBlob && (
-            <Button
-              onClick={startRecording}
-              size="lg"
-              className="w-32 h-32 rounded-full bg-gradient-warm hover:scale-110 transition-all shadow-glow"
-            >
-              <Mic className="w-12 h-12" />
-            </Button>
+            <div className="relative group">
+              {/* Outer animated rings */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-accent to-primary opacity-60 blur-xl group-hover:blur-2xl transition-all duration-500 animate-pulse" />
+              <div className="absolute inset-2 rounded-full bg-gradient-to-r from-accent via-primary to-accent opacity-40 blur-lg animate-pulse" style={{ animationDelay: '0.5s' }} />
+              
+              <Button
+                onClick={startRecording}
+                size="lg"
+                className="relative w-36 h-36 rounded-full bg-gradient-to-br from-primary via-primary/90 to-accent hover:scale-110 transition-all duration-300 shadow-[0_0_40px_rgba(var(--primary),0.4)] hover:shadow-[0_0_60px_rgba(var(--primary),0.6)] border-4 border-white/20"
+              >
+                <div className="absolute inset-0 rounded-full bg-gradient-to-t from-white/0 via-white/10 to-white/30" />
+                <Mic className="w-14 h-14 drop-shadow-lg relative z-10" />
+              </Button>
+            </div>
           )}
 
           {isRecording && (
             <div className="w-full flex flex-col items-center gap-4">
-              <Button
-                onClick={stopRecording}
-                size="lg"
-                className="w-32 h-32 rounded-full bg-destructive hover:scale-110 transition-all shadow-glow animate-pulse"
-              >
-                <Square className="w-12 h-12" />
-              </Button>
+              <div className="relative">
+                {/* Pulsing recording indicator rings */}
+                <div className="absolute inset-0 rounded-full bg-destructive/60 animate-ping" />
+                <div className="absolute -inset-2 rounded-full border-4 border-destructive/40 animate-pulse" />
+                <div className="absolute -inset-4 rounded-full border-2 border-destructive/20 animate-pulse" style={{ animationDelay: '0.3s' }} />
+                
+                <Button
+                  onClick={stopRecording}
+                  size="lg"
+                  className="relative w-36 h-36 rounded-full bg-gradient-to-br from-destructive via-destructive/90 to-red-700 hover:scale-105 transition-all duration-300 shadow-[0_0_50px_rgba(239,68,68,0.5)] border-4 border-white/20"
+                >
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-t from-white/0 via-white/10 to-white/20" />
+                  <Square className="w-12 h-12 drop-shadow-lg relative z-10" />
+                </Button>
+              </div>
               <div className="w-full">
                 <div className="text-xs text-muted-foreground mb-2 text-center">Input level</div>
                 <Progress value={Math.min(100, Math.max(0, Math.round(meterLevel * 100)))} className="h-2 rounded-full" />
