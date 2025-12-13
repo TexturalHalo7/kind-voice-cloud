@@ -214,18 +214,25 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
 
         <div className="flex flex-col items-center gap-4 py-6">
           {!audioUrl ? (
-            <Button
-              onClick={fetchRandomMessage}
-              disabled={loading}
-              size="lg"
-              className="w-32 h-32 rounded-full bg-gradient-cool hover:scale-110 transition-all shadow-glow"
-            >
-              {loading ? (
-                <RefreshCw className="w-12 h-12 animate-spin" />
-              ) : (
-                <Play className="w-12 h-12" fill="currentColor" />
-              )}
-            </Button>
+            <div className="relative group">
+              {/* Outer animated rings */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-accent via-secondary to-accent opacity-60 blur-xl group-hover:blur-2xl transition-all duration-500 animate-pulse" />
+              <div className="absolute inset-2 rounded-full bg-gradient-to-r from-secondary via-accent to-secondary opacity-40 blur-lg animate-pulse" style={{ animationDelay: '0.5s' }} />
+              
+              <Button
+                onClick={fetchRandomMessage}
+                disabled={loading}
+                size="lg"
+                className="relative w-36 h-36 rounded-full bg-gradient-to-br from-accent via-accent/90 to-secondary hover:scale-110 transition-all duration-300 shadow-[0_0_40px_hsl(var(--accent)/0.4)] hover:shadow-[0_0_60px_hsl(var(--accent)/0.6)] border-4 border-white/20 disabled:opacity-70"
+              >
+                <div className="absolute inset-0 rounded-full bg-gradient-to-t from-white/0 via-white/10 to-white/30" />
+                {loading ? (
+                  <RefreshCw className="w-14 h-14 animate-spin drop-shadow-lg relative z-10" />
+                ) : (
+                  <Play className="w-14 h-14 drop-shadow-lg relative z-10 ml-1" fill="currentColor" />
+                )}
+              </Button>
+            </div>
           ) : (
             <div className="space-y-4 w-full">
               <div className="text-center">
