@@ -215,15 +215,14 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
         <div className="flex flex-col items-center gap-4 py-6">
           {!audioUrl ? (
             <div className="relative group">
-              {/* Outer animated rings */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-accent via-secondary to-accent opacity-60 blur-xl group-hover:blur-2xl transition-all duration-500 animate-pulse" />
-              <div className="absolute inset-2 rounded-full bg-gradient-to-r from-secondary via-accent to-secondary opacity-40 blur-lg animate-pulse" style={{ animationDelay: '0.5s' }} />
+              {/* Subtle glow on hover only */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-accent via-secondary to-accent opacity-0 group-hover:opacity-40 blur-xl transition-all duration-500" />
               
               <Button
                 onClick={fetchRandomMessage}
                 disabled={loading}
                 size="lg"
-                className="relative w-36 h-36 rounded-full bg-gradient-to-br from-accent via-accent/90 to-secondary hover:scale-110 transition-all duration-300 shadow-[0_0_40px_hsl(var(--accent)/0.4)] hover:shadow-[0_0_60px_hsl(var(--accent)/0.6)] border-4 border-white/20 disabled:opacity-70"
+                className="relative w-36 h-36 rounded-full bg-gradient-to-br from-accent via-accent/90 to-secondary hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-[0_0_40px_hsl(var(--accent)/0.4)] border-4 border-white/20 disabled:opacity-70"
               >
                 <div className="absolute inset-0 rounded-full bg-gradient-to-t from-white/0 via-white/10 to-white/30" />
                 {loading ? (
@@ -234,69 +233,87 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
               </Button>
             </div>
           ) : (
-            <div className="space-y-4 w-full">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <p className="text-sm text-muted-foreground">From</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${getCategoryColor(messageCategory)}`}>
-                    {messageCategory}
-                  </span>
+            <div className="space-y-5 w-full">
+              {/* Styled audio player card */}
+              <div className="relative p-5 rounded-2xl bg-gradient-to-br from-accent/10 via-secondary/10 to-primary/5 border border-accent/20 shadow-lg overflow-hidden">
+                {/* Decorative background elements */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-accent/20 to-transparent rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-primary/15 to-transparent rounded-full blur-xl translate-y-1/2 -translate-x-1/2" />
+                
+                <div className="relative">
+                  {/* Header with avatar and info */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex-shrink-0 w-14 h-14 rounded-full bg-gradient-to-br from-accent to-secondary flex items-center justify-center shadow-lg">
+                      <Sparkles className="w-7 h-7 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getCategoryColor(messageCategory)}`}>
+                          {messageCategory.charAt(0).toUpperCase() + messageCategory.slice(1)}
+                        </span>
+                      </div>
+                      <p className="text-lg font-semibold text-foreground truncate">{username}</p>
+                      <p className="text-xs text-muted-foreground">Shared a message of kindness</p>
+                    </div>
+                  </div>
+                  
+                  {/* Audio player */}
+                  <div className="bg-background/60 backdrop-blur-sm rounded-xl p-3 border border-border/50">
+                    <audio
+                      ref={audioRef}
+                      src={audioUrl ?? undefined}
+                      controls
+                      className="w-full h-10 [&::-webkit-media-controls-panel]:bg-transparent"
+                      crossOrigin="anonymous"
+                      preload="metadata"
+                      playsInline
+                      muted={false}
+                      onPlay={() => {
+                        const a = audioRef.current;
+                        if (a) {
+                          a.muted = false;
+                          a.volume = 1;
+                        }
+                      }}
+                      onError={() =>
+                        toast.error(
+                          "Playback failed. Your browser may not support this audio format. Try a different browser."
+                        )
+                      }
+                    />
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex items-center justify-center gap-3 mt-4">
+                    <Button
+                      onClick={handleFavorite}
+                      variant="ghost"
+                      size="sm"
+                      className={`rounded-full px-4 transition-all duration-300 ${isFavorited ? "bg-red-100 text-red-600 hover:bg-red-200" : "hover:bg-accent/10"}`}
+                    >
+                      <Heart className={`w-4 h-4 mr-1.5 ${isFavorited ? "fill-current" : ""}`} />
+                      {isFavorited ? "Saved" : "Save"}
+                    </Button>
+                    <Button
+                      onClick={handleThankYou}
+                      variant="ghost"
+                      size="sm"
+                      disabled={hasThanked}
+                      className={`rounded-full px-4 transition-all duration-300 ${hasThanked ? "bg-green-100 text-green-600" : "hover:bg-accent/10"}`}
+                    >
+                      <ThumbsUp className={`w-4 h-4 mr-1.5 ${hasThanked ? "fill-current" : ""}`} />
+                      Thank You {thanksCount > 0 && `(${thanksCount})`}
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-lg font-semibold text-primary">{username}</p>
-              </div>
-              <audio
-                ref={audioRef}
-                src={audioUrl ?? undefined}
-                controls
-                className="w-full rounded-xl"
-                crossOrigin="anonymous"
-                preload="metadata"
-                playsInline
-                muted={false}
-                onPlay={() => {
-                  const a = audioRef.current;
-                  if (a) {
-                    a.muted = false;
-                    a.volume = 1;
-                  }
-                }}
-                onError={() =>
-                  toast.error(
-                    "Playback failed. Your browser may not support this audio format. Try a different browser."
-                  )
-                }
-              />
-              
-              {/* Action Buttons */}
-              <div className="flex items-center justify-center gap-3">
-                <Button
-                  onClick={handleFavorite}
-                  variant="outline"
-                  size="sm"
-                  className={`rounded-full ${isFavorited ? "bg-red-50 border-red-200 text-red-600" : ""}`}
-                >
-                  <Heart className={`w-4 h-4 mr-1 ${isFavorited ? "fill-current" : ""}`} />
-                  {isFavorited ? "Saved" : "Save"}
-                </Button>
-                <Button
-                  onClick={handleThankYou}
-                  variant="outline"
-                  size="sm"
-                  disabled={hasThanked}
-                  className={`rounded-full ${hasThanked ? "bg-green-50 border-green-200 text-green-600" : ""}`}
-                >
-                  <ThumbsUp className={`w-4 h-4 mr-1 ${hasThanked ? "fill-current" : ""}`} />
-                  Thank You {thanksCount > 0 && `(${thanksCount})`}
-                </Button>
               </div>
 
               <Button
                 onClick={fetchRandomMessage}
                 disabled={loading}
-                variant="outline"
-                className="w-full rounded-xl"
+                className="w-full rounded-xl bg-gradient-to-r from-accent via-secondary to-accent hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
+                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
                 Hear Another Message
               </Button>
             </div>
