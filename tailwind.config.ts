@@ -52,12 +52,10 @@ export default {
         "gradient-warm": "var(--gradient-warm)",
         "gradient-cool": "var(--gradient-cool)",
         "gradient-hero": "var(--gradient-hero)",
-        "gradient-button": "var(--gradient-button)",
       },
       boxShadow: {
         "soft": "var(--shadow-soft)",
         "glow": "var(--shadow-glow)",
-        "button": "var(--shadow-button)",
       },
       borderRadius: {
         lg: "var(--radius)",
