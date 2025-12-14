@@ -72,13 +72,13 @@ const Auth = () => {
               <Heart className="w-12 h-12 text-primary animate-pulse" fill="currentColor" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white drop-shadow-lg">
+          <h1 className="text-4xl font-bold text-foreground drop-shadow-sm">
             Voices of Kindness
           </h1>
-          <p className="text-white/90 text-lg flex items-center justify-center gap-2">
-            <Sparkles className="w-5 h-5" />
+          <p className="text-foreground/80 text-lg flex items-center justify-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary" />
             Send a smile. Hear a smile.
-            <Sparkles className="w-5 h-5" />
+            <Sparkles className="w-5 h-5 text-primary" />
           </p>
         </div>
 
