@@ -139,7 +139,7 @@ const Auth = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-warm hover:opacity-90 transition-all shadow-soft rounded-xl h-12 text-base font-semibold"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all shadow-glow rounded-xl h-12 text-base font-semibold"
                 disabled={loading}
               >
                 {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
