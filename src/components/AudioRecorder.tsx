@@ -289,10 +289,10 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
               <Button
                 onClick={startRecording}
                 size="lg"
-                className="relative w-36 h-36 rounded-full bg-gradient-to-br from-primary via-primary/90 to-accent hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-[0_0_40px_hsl(var(--primary)/0.4)] border-4 border-white/20"
+                className="relative w-36 h-36 rounded-full bg-gradient-to-br from-primary via-primary/90 to-accent hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-[0_0_40px_hsl(var(--primary)/0.4)] border-4 border-white/30"
               >
-                <div className="absolute inset-0 rounded-full bg-gradient-to-t from-white/0 via-white/10 to-white/30" />
-                <Mic className="w-14 h-14 drop-shadow-lg relative z-10" />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-t from-black/10 via-transparent to-white/30" />
+                <Mic className="w-14 h-14 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] relative z-10" />
               </Button>
             </div>
           )}
