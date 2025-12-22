@@ -108,9 +108,15 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
       setFileExt(finalType.includes("mp4") ? "m4a" : finalType.includes("ogg") ? "ogg" : "webm");
 
       mediaRecorder.ondataavailable = (event) => {
+        console.log("Audio data available:", event.data.size, "bytes");
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
+      };
+
+      mediaRecorder.onerror = (event: any) => {
+        console.error("MediaRecorder error:", event.error);
+        toast.error("Recording error occurred. Please try again.");
       };
 
       mediaRecorder.onstop = async () => {
@@ -150,7 +156,9 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         }
       };
 
-      mediaRecorder.start();
+      // Start recording with timeslice to collect data every second
+      mediaRecorder.start(1000);
+      console.log("MediaRecorder started, state:", mediaRecorder.state);
       setIsRecording(true);
       setRecordingStartTime(Date.now());
       setHasAudioActivity(false); // Reset audio activity tracking
