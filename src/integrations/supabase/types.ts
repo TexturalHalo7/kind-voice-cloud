@@ -14,6 +14,82 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversation_messages: {
+        Row: {
+          audio_url: string | null
+          content: string | null
+          conversation_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          message_type: string
+          sender_id: string
+        }
+        Insert: {
+          audio_url?: string | null
+          content?: string | null
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message_type?: string
+          sender_id: string
+        }
+        Update: {
+          audio_url?: string | null
+          content?: string | null
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message_type?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          original_voice_message_id: string | null
+          participant_one_id: string
+          participant_two_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          original_voice_message_id?: string | null
+          participant_one_id: string
+          participant_two_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          original_voice_message_id?: string | null
+          participant_one_id?: string
+          participant_two_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_original_voice_message_id_fkey"
+            columns: ["original_voice_message_id"]
+            isOneToOne: false
+            referencedRelation: "voice_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string
