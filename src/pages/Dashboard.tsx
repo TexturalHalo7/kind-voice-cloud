@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Heart, LogOut, Sparkles, Star, User as UserIcon, Flame, BookHeart } from "lucide-react";
+import { Heart, LogOut, Sparkles, Star, User as UserIcon, Flame, BookHeart, MessageCircle } from "lucide-react";
 import AudioRecorder from "@/components/AudioRecorder";
 import RandomMessagePlayer from "@/components/RandomMessagePlayer";
 import Leaderboard from "@/components/Leaderboard";
@@ -140,6 +140,16 @@ const Dashboard = () => {
               title="My Favorites"
             >
               <BookHeart className="w-5 h-5" />
+            </Button>
+
+            <Button
+              onClick={() => navigate("/conversations")}
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20"
+              title="Messages"
+            >
+              <MessageCircle className="w-5 h-5" />
             </Button>
             
             <Button

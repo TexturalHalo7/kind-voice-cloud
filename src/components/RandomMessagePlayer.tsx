@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Play, RefreshCw, Sparkles, Heart, ThumbsUp, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import StartConversationButton from "./StartConversationButton";
 
 interface RandomMessagePlayerProps {
   userId?: string;
@@ -17,6 +18,7 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState<string>("");
   const [messageId, setMessageId] = useState<string | null>(null);
+  const [messageOwnerId, setMessageOwnerId] = useState<string | null>(null);
   const [category, setCategory] = useState<string>("all");
   const [messageCategory, setMessageCategory] = useState<string>("general");
   const [thanksCount, setThanksCount] = useState(0);
@@ -100,6 +102,7 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
       setAudioUrl(randomMessage.audio_url);
       setUsername((randomMessage.profiles as any).username);
       setMessageId(randomMessage.id);
+      setMessageOwnerId(randomMessage.user_id);
       setMessageCategory(randomMessage.category || "general");
       setThanksCount(randomMessage.thanks_count || 0);
       toast.success("Here's a message of kindness for you! 💝");
@@ -284,7 +287,7 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
                   </div>
                   
                   {/* Action Buttons */}
-                  <div className="flex items-center justify-center gap-3 mt-4">
+                  <div className="flex items-center justify-center gap-3 mt-4 flex-wrap">
                     <Button
                       onClick={handleFavorite}
                       variant="ghost"
@@ -304,6 +307,14 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
                       <ThumbsUp className={`w-4 h-4 mr-1.5 ${hasThanked ? "fill-current" : ""}`} />
                       Thank You {thanksCount > 0 && `(${thanksCount})`}
                     </Button>
+                    {userId && messageOwnerId && userId !== messageOwnerId && (
+                      <StartConversationButton
+                        currentUserId={userId}
+                        otherUserId={messageOwnerId}
+                        voiceMessageId={messageId || undefined}
+                        className="rounded-full px-4 transition-all duration-300 hover:bg-blue-100 hover:text-blue-600"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
