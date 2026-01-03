@@ -217,24 +217,18 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
 
         <div className="flex flex-col items-center gap-4 py-6">
           {!audioUrl ? (
-            <div className="relative group">
-              {/* Subtle glow on hover only */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-accent via-secondary to-accent opacity-0 group-hover:opacity-40 blur-xl transition-all duration-500" />
-              
-              <Button
-                onClick={fetchRandomMessage}
-                disabled={loading}
-                size="lg"
-                className="relative w-36 h-36 rounded-full bg-gradient-to-br from-accent via-accent/90 to-secondary hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-[0_0_40px_hsl(var(--accent)/0.4)] border-4 border-white/20 disabled:opacity-70"
-              >
-                <div className="absolute inset-0 rounded-full bg-gradient-to-t from-white/0 via-white/10 to-white/30" />
-                {loading ? (
-                  <RefreshCw className="w-14 h-14 animate-spin drop-shadow-lg relative z-10" />
-                ) : (
-                  <Play className="w-14 h-14 drop-shadow-lg relative z-10 ml-1" fill="currentColor" />
-                )}
-              </Button>
-            </div>
+            <Button
+              onClick={fetchRandomMessage}
+              disabled={loading}
+              size="lg"
+              className="w-32 h-32 rounded-full bg-secondary hover:bg-secondary/90 hover:scale-105 transition-all duration-300 shadow-lg disabled:opacity-70"
+            >
+              {loading ? (
+                <RefreshCw className="w-12 h-12 text-secondary-foreground animate-spin" />
+              ) : (
+                <Play className="w-12 h-12 text-secondary-foreground ml-1" fill="currentColor" />
+              )}
+            </Button>
           ) : (
             <div className="space-y-5 w-full">
               {/* Styled audio player card */}

@@ -290,19 +290,13 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         
         <div className="flex flex-col items-center gap-4 py-6">
           {!isRecording && !audioBlob && (
-            <div className="relative group">
-              {/* Subtle glow on hover only */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-accent to-primary opacity-0 group-hover:opacity-40 blur-xl transition-all duration-500" />
-              
-              <Button
-                onClick={startRecording}
-                size="lg"
-                className="relative w-36 h-36 rounded-full bg-gradient-to-br from-primary via-primary/90 to-accent hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-[0_0_40px_hsl(var(--primary)/0.4)] border-4 border-white/30"
-              >
-                <div className="absolute inset-0 rounded-full bg-gradient-to-t from-black/10 via-transparent to-white/30" />
-                <Mic className="w-14 h-14 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] relative z-10" />
-              </Button>
-            </div>
+            <Button
+              onClick={startRecording}
+              size="lg"
+              className="w-32 h-32 rounded-full bg-primary hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg"
+            >
+              <Mic className="w-12 h-12 text-primary-foreground" />
+            </Button>
           )}
 
           {isRecording && (
