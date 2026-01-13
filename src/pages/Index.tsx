@@ -42,6 +42,14 @@ const Index = () => {
             happy, and encouraging voice messages to brighten each other's day.
           </p>
 
+          <p className="text-base text-white/70 max-w-2xl mx-auto leading-relaxed">
+            Sometimes all it takes is hearing another human voice to feel a little less alone. 
+            This space exists for people to share kind, supportive messages and for others to receive them when they need it most. 
+            By sending a message, you could be helping someone through a difficult moment. 
+            By listening, you might find the encouragement you didn't know you needed. 
+            Every voice here has the power to make a difference.
+          </p>
+
           <div className="flex gap-4 justify-center pt-8">
             <Button
               onClick={() => navigate("/auth")}
