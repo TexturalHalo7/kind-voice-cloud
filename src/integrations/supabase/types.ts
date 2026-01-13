@@ -282,6 +282,19 @@ export type Database = {
         }[]
       }
       get_public_username: { Args: { target_user_id: string }; Returns: string }
+      get_random_voice_messages: {
+        Args: { category_filter?: string; limit_count?: number }
+        Returns: {
+          audio_url: string
+          category: string
+          created_at: string
+          duration_seconds: number
+          id: string
+          thanks_count: number
+          user_id: string
+          username: string
+        }[]
+      }
       reset_monthly_message_counts: { Args: never; Returns: undefined }
     }
     Enums: {
