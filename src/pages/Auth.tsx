@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Heart, Sparkles } from "lucide-react";
+import { Heart, Sparkles, Check, X } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -15,6 +15,12 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Password validation
+  const hasMinLength = password.length >= 8;
+  const hasNumber = /\d/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~;']/.test(password);
+  const isPasswordValid = hasMinLength && hasNumber && hasSpecialChar;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -26,6 +32,13 @@ const Auth = () => {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate password on signup
+    if (!isLogin && !isPasswordValid) {
+      toast.error("Please meet all password requirements");
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -62,6 +75,13 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
+    <div className={`flex items-center gap-2 text-sm ${met ? "text-green-600" : "text-muted-foreground"}`}>
+      {met ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+      <span>{text}</span>
+    </div>
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
@@ -132,9 +152,15 @@ const Auth = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={6}
                   className="rounded-xl"
                 />
+                {!isLogin && password.length > 0 && (
+                  <div className="space-y-1 pt-2">
+                    <PasswordRequirement met={hasMinLength} text="At least 8 characters" />
+                    <PasswordRequirement met={hasNumber} text="At least 1 number" />
+                    <PasswordRequirement met={hasSpecialChar} text="At least 1 special character" />
+                  </div>
+                )}
               </div>
 
               <Button
