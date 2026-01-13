@@ -76,10 +76,7 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
     try {
       let query = supabase
         .from("voice_messages")
-        .select(`
-          *,
-          profiles!inner(username)
-        `)
+        .select("*")
         .limit(50);
 
       if (filterCategory !== "all") {
@@ -99,8 +96,13 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
       const randomIndex = Math.floor(Math.random() * messages.length);
       const randomMessage = messages[randomIndex];
 
+      // Fetch username using secure function
+      const { data: fetchedUsername } = await supabase.rpc("get_public_username", {
+        target_user_id: randomMessage.user_id
+      });
+
       setAudioUrl(randomMessage.audio_url);
-      setUsername((randomMessage.profiles as any).username);
+      setUsername(fetchedUsername || "Anonymous");
       setMessageId(randomMessage.id);
       setMessageOwnerId(randomMessage.user_id);
       setMessageCategory(randomMessage.category || "general");

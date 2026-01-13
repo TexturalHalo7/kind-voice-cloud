@@ -271,6 +271,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_leaderboard_profiles: {
+        Args: never
+        Returns: {
+          message_count: number
+          monthly_message_count: number
+          total_thanks_received: number
+          user_id: string
+          username: string
+        }[]
+      }
+      get_public_username: { Args: { target_user_id: string }; Returns: string }
       reset_monthly_message_counts: { Args: never; Returns: undefined }
     }
     Enums: {

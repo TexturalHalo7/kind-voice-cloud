@@ -17,19 +17,17 @@ const Leaderboard = () => {
 
   useEffect(() => {
     const fetchLeaderboards = async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("username, message_count, monthly_message_count")
-        .order("message_count", { ascending: false })
-        .limit(10);
+      // Use the secure function to get leaderboard data
+      const { data, error } = await supabase.rpc("get_leaderboard_profiles");
 
       if (!error && data) {
-        setAllTimeLeaders(data);
+        // Take top 10 for all-time (already sorted by message_count)
+        setAllTimeLeaders(data.slice(0, 10));
         
-        // Sort monthly leaders
+        // Sort by monthly for monthly leaders
         const monthlyData = [...data].sort((a, b) => 
           b.monthly_message_count - a.monthly_message_count
-        );
+        ).slice(0, 10);
         setMonthlyLeaders(monthlyData);
       }
       setLoading(false);
