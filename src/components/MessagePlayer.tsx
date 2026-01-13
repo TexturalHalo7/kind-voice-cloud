@@ -7,13 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import StartConversationButton from "./StartConversationButton";
 
-interface RandomMessagePlayerProps {
+interface MessagePlayerProps {
   userId?: string;
 }
 
 type MessageCategory = "all" | "general" | "encouragement" | "gratitude" | "motivation";
 
-const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
+const MessagePlayer = ({ userId }: MessagePlayerProps) => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState<string>("");
@@ -68,13 +68,13 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
     setHasThanked(!!data);
   };
 
-  const fetchRandomMessage = async () => {
+  const fetchMessage = async () => {
     setLoading(true);
     setHasThanked(false);
     setIsFavorited(false);
 
     try {
-      // Use secure function to get random voice messages
+      // Use secure function to get voice messages
       const { data: messages, error } = await supabase.rpc("get_random_voice_messages", {
         category_filter: filterCategory,
         limit_count: 50
@@ -88,15 +88,15 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
         return;
       }
 
-      const randomIndex = Math.floor(Math.random() * messages.length);
-      const randomMessage = messages[randomIndex];
+      const selectedIndex = Math.floor(Math.random() * messages.length);
+      const selectedMessage = messages[selectedIndex];
 
-      setAudioUrl(randomMessage.audio_url);
-      setUsername(randomMessage.username || "Anonymous");
-      setMessageId(randomMessage.id);
-      setMessageOwnerId(randomMessage.user_id);
-      setMessageCategory(randomMessage.category || "general");
-      setThanksCount(randomMessage.thanks_count || 0);
+      setAudioUrl(selectedMessage.audio_url);
+      setUsername(selectedMessage.username || "Anonymous");
+      setMessageId(selectedMessage.id);
+      setMessageOwnerId(selectedMessage.user_id);
+      setMessageCategory(selectedMessage.category || "general");
+      setThanksCount(selectedMessage.thanks_count || 0);
       toast.success("Here's a message of kindness for you! 💝");
     } catch (error: any) {
       toast.error("Failed to fetch message: " + error.message);
@@ -183,7 +183,7 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
           Brighten My Day
         </CardTitle>
         <CardDescription>
-          Listen to a random message of kindness from the community
+          Listen to a message of kindness from the community
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -210,7 +210,7 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
         <div className="flex flex-col items-center gap-4 py-6">
           {!audioUrl ? (
             <Button
-              onClick={fetchRandomMessage}
+              onClick={fetchMessage}
               disabled={loading}
               size="lg"
               className="w-32 h-32 rounded-full bg-secondary hover:bg-secondary/90 hover:scale-105 transition-all duration-300 shadow-lg disabled:opacity-70"
@@ -306,7 +306,7 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
               </div>
 
               <Button
-                onClick={fetchRandomMessage}
+                onClick={fetchMessage}
                 disabled={loading}
                 className="w-full rounded-xl bg-gradient-to-r from-accent via-secondary to-accent hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
               >
@@ -329,4 +329,4 @@ const RandomMessagePlayer = ({ userId }: RandomMessagePlayerProps) => {
   );
 };
 
-export default RandomMessagePlayer;
+export default MessagePlayer;

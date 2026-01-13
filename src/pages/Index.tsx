@@ -89,7 +89,7 @@ const Index = () => {
             </div>
             <h3 className="text-2xl font-bold">Brighten Days</h3>
             <p className="text-muted-foreground">
-              Listen to random messages of encouragement whenever you need a boost
+              Listen to messages of encouragement whenever you need a boost
             </p>
           </div>
 

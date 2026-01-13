@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Heart, LogOut, Sparkles, Star, User as UserIcon, Flame, BookHeart, MessageCircle } from "lucide-react";
 import AudioRecorder from "@/components/AudioRecorder";
-import RandomMessagePlayer from "@/components/RandomMessagePlayer";
+import MessagePlayer from "@/components/MessagePlayer";
 import Leaderboard from "@/components/Leaderboard";
 import GlobalCounter from "@/components/GlobalCounter";
 import NotificationBell from "@/components/NotificationBell";
@@ -184,7 +184,7 @@ const Dashboard = () => {
         {/* Main Actions Grid */}
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           <AudioRecorder userId={user?.id || ""} />
-          <RandomMessagePlayer userId={user?.id} />
+          <MessagePlayer userId={user?.id} />
         </div>
 
         {/* Stats Section */}
