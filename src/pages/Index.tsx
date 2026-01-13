@@ -52,14 +52,14 @@ const Index = () => {
 
           <div className="flex gap-4 justify-center pt-8">
             <Button
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/auth?mode=signup")}
               size="lg"
               className="bg-white text-primary hover:bg-white/90 shadow-glow rounded-full px-8 h-14 text-lg font-semibold"
             >
               Get Started
             </Button>
             <Button
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/auth?mode=signin")}
               size="lg"
               variant="outline"
               className="border-2 border-white text-primary hover:bg-white/10 rounded-full px-8 h-14 text-lg font-semibold backdrop-blur-sm"
@@ -113,7 +113,7 @@ const Index = () => {
             Join thousands of people making the world a little brighter, one voice message at a time.
           </p>
           <Button
-            onClick={() => navigate("/auth")}
+            onClick={() => navigate("/auth?mode=signup")}
             size="lg"
             className="bg-gradient-warm hover:opacity-90 shadow-soft rounded-full px-12 h-14 text-lg font-semibold"
           >
