@@ -101,7 +101,12 @@ const ConversationChat = ({ conversationId, userId, onBack }: ConversationChatPr
         },
         (payload) => {
           const newMsg = payload.new as Message;
-          setMessages((prev) => [...prev, newMsg]);
+          // Only add if not already present (avoids duplicates from optimistic updates)
+          setMessages((prev) => {
+            const exists = prev.some((m) => m.id === newMsg.id);
+            if (exists) return prev;
+            return [...prev, newMsg];
+          });
           
           // Mark as read if from other user
           if (newMsg.sender_id !== userId) {
@@ -130,18 +135,45 @@ const ConversationChat = ({ conversationId, userId, onBack }: ConversationChatPr
     e.preventDefault();
     if (!newMessage.trim() || sending) return;
 
-    setSending(true);
-    const { error } = await supabase.from("conversation_messages").insert({
-      conversation_id: conversationId,
+    const messageContent = newMessage.trim();
+    const tempId = `temp-${Date.now()}`;
+    
+    // Optimistic update - add message immediately
+    const optimisticMessage: Message = {
+      id: tempId,
       sender_id: userId,
-      content: newMessage.trim(),
+      content: messageContent,
+      audio_url: null,
       message_type: "text",
-    });
+      is_read: false,
+      created_at: new Date().toISOString(),
+    };
+    
+    setMessages((prev) => [...prev, optimisticMessage]);
+    setNewMessage("");
+    setSending(true);
+
+    const { data, error } = await supabase
+      .from("conversation_messages")
+      .insert({
+        conversation_id: conversationId,
+        sender_id: userId,
+        content: messageContent,
+        message_type: "text",
+      })
+      .select()
+      .single();
 
     if (error) {
+      // Remove optimistic message on error
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setNewMessage(messageContent);
       toast.error("Failed to send message");
-    } else {
-      setNewMessage("");
+    } else if (data) {
+      // Replace temp message with real one
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? data : m))
+      );
     }
     setSending(false);
   };
@@ -182,6 +214,8 @@ const ConversationChat = ({ conversationId, userId, onBack }: ConversationChatPr
 
   const uploadAndSendVoice = async (audioBlob: Blob) => {
     setSending(true);
+    const tempId = `temp-voice-${Date.now()}`;
+    
     try {
       const fileName = `chat/${userId}/${Date.now()}.webm`;
       const { error: uploadError } = await supabase.storage
@@ -194,14 +228,40 @@ const ConversationChat = ({ conversationId, userId, onBack }: ConversationChatPr
         .from("voice_messages")
         .getPublicUrl(fileName);
 
-      const { error } = await supabase.from("conversation_messages").insert({
-        conversation_id: conversationId,
+      // Optimistic update for voice message
+      const optimisticMessage: Message = {
+        id: tempId,
         sender_id: userId,
+        content: null,
         audio_url: publicUrl,
         message_type: "voice",
-      });
+        is_read: false,
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, optimisticMessage]);
 
-      if (error) throw error;
+      const { data, error } = await supabase
+        .from("conversation_messages")
+        .insert({
+          conversation_id: conversationId,
+          sender_id: userId,
+          audio_url: publicUrl,
+          message_type: "voice",
+        })
+        .select()
+        .single();
+
+      if (error) {
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        throw error;
+      }
+      
+      if (data) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? data : m))
+        );
+      }
+      
       toast.success("Voice message sent!");
     } catch (error: any) {
       console.error("Error sending voice message:", error);
