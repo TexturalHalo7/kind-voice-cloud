@@ -4,9 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Heart, LogOut, MessageCircle, ArrowLeft } from "lucide-react";
+import { Heart, LogOut, MessageCircle, ArrowLeft, Search } from "lucide-react";
 import ConversationList from "@/components/ConversationList";
 import ConversationChat from "@/components/ConversationChat";
+import UserSearch from "@/components/UserSearch";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const Conversations = () => {
   const navigate = useNavigate();
@@ -77,6 +85,23 @@ const Conversations = () => {
             <h1 className="text-2xl font-bold text-white">Messages</h1>
           </div>
           <div className="flex items-center gap-4">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="text-white hover:bg-white/20"
+                >
+                  <Search className="w-4 h-4 mr-2" />
+                  Find Users
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Search Users</DialogTitle>
+                </DialogHeader>
+                <UserSearch currentUserId={user?.id || ""} />
+              </DialogContent>
+            </Dialog>
             <Button
               onClick={() => navigate("/dashboard")}
               variant="ghost"
