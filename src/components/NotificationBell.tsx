@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell } from "lucide-react";
+import { Bell, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -16,6 +16,8 @@ interface Notification {
   message: string;
   read: boolean;
   created_at: string;
+  related_message_id: string | null;
+  audio_url?: string;
 }
 
 interface NotificationBellProps {
@@ -26,6 +28,8 @@ const NotificationBell = ({ userId }: NotificationBellProps) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
   const fetchNotifications = async () => {
     const { data } = await supabase
@@ -36,7 +40,21 @@ const NotificationBell = ({ userId }: NotificationBellProps) => {
       .limit(20);
     
     if (data) {
-      setNotifications(data);
+      // Fetch audio URLs for request_fulfilled notifications
+      const notificationsWithAudio = await Promise.all(
+        data.map(async (notification) => {
+          if (notification.type === "request_fulfilled" && notification.related_message_id) {
+            const { data: voiceMessage } = await supabase
+              .from("voice_messages")
+              .select("audio_url")
+              .eq("id", notification.related_message_id)
+              .maybeSingle();
+            return { ...notification, audio_url: voiceMessage?.audio_url };
+          }
+          return notification;
+        })
+      );
+      setNotifications(notificationsWithAudio);
       setUnreadCount(data.filter((n) => !n.read).length);
     }
   };
@@ -56,9 +74,8 @@ const NotificationBell = ({ userId }: NotificationBellProps) => {
             table: "notifications",
             filter: `user_id=eq.${userId}`,
           },
-          (payload) => {
-            setNotifications((prev) => [payload.new as Notification, ...prev]);
-            setUnreadCount((prev) => prev + 1);
+          () => {
+            fetchNotifications();
           }
         )
         .subscribe();
@@ -68,6 +85,36 @@ const NotificationBell = ({ userId }: NotificationBellProps) => {
       };
     }
   }, [userId]);
+
+  useEffect(() => {
+    return () => {
+      if (audioElement) {
+        audioElement.pause();
+      }
+    };
+  }, [audioElement]);
+
+  const togglePlay = (notification: Notification) => {
+    if (!notification.audio_url) return;
+
+    if (playingId === notification.id) {
+      audioElement?.pause();
+      setPlayingId(null);
+      setAudioElement(null);
+    } else {
+      if (audioElement) {
+        audioElement.pause();
+      }
+      const audio = new Audio(notification.audio_url);
+      audio.onended = () => {
+        setPlayingId(null);
+        setAudioElement(null);
+      };
+      audio.play();
+      setPlayingId(notification.id);
+      setAudioElement(audio);
+    }
+  };
 
   const markAllAsRead = async () => {
     if (notifications.some((n) => !n.read)) {
@@ -86,6 +133,11 @@ const NotificationBell = ({ userId }: NotificationBellProps) => {
     setOpen(isOpen);
     if (isOpen) {
       markAllAsRead();
+    }
+    if (!isOpen && audioElement) {
+      audioElement.pause();
+      setPlayingId(null);
+      setAudioElement(null);
     }
   };
 
@@ -123,6 +175,26 @@ const NotificationBell = ({ userId }: NotificationBellProps) => {
                   className={`p-3 ${!notification.read ? "bg-primary/5" : ""}`}
                 >
                   <p className="text-sm">{notification.message}</p>
+                  {notification.type === "request_fulfilled" && notification.audio_url && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="mt-2 w-full"
+                      onClick={() => togglePlay(notification)}
+                    >
+                      {playingId === notification.id ? (
+                        <>
+                          <Pause className="w-4 h-4 mr-2" />
+                          Pause
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4 mr-2" />
+                          Listen to Message
+                        </>
+                      )}
+                    </Button>
+                  )}
                   <p className="text-xs text-muted-foreground mt-1">
                     {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                   </p>
