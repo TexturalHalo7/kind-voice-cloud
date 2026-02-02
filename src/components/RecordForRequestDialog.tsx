@@ -118,28 +118,46 @@ const RecordForRequestDialog = ({
         .from("voice-messages")
         .getPublicUrl(fileName);
 
-      // Save voice message
-      const { error: dbError } = await supabase
+      // Save voice message and get its ID
+      const { data: voiceMessage, error: dbError } = await supabase
         .from("voice_messages")
         .insert({
           user_id: userId,
           audio_url: publicUrl,
           category: "general",
-        });
+        })
+        .select("id")
+        .single();
 
       if (dbError) throw dbError;
 
-      // Mark request as fulfilled
-      const { error: updateError } = await supabase
+      // Get the fulfiller's username
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("user_id", userId)
+        .single();
+
+      // Create notification for the requester with the audio
+      const { error: notifError } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: request.requester_id,
+          type: "request_fulfilled",
+          message: `${profile?.username || "Someone"} recorded a voice message for your request: "${request.topic}"`,
+          related_message_id: voiceMessage.id,
+          from_user_id: userId,
+        });
+
+      if (notifError) throw notifError;
+
+      // Delete the request since it's fulfilled
+      const { error: deleteError } = await supabase
         .from("voice_message_requests")
-        .update({
-          is_fulfilled: true,
-          fulfilled_by: userId,
-          fulfilled_at: new Date().toISOString(),
-        })
+        .delete()
         .eq("id", request.id);
 
-      if (updateError) throw updateError;
+      if (deleteError) throw deleteError;
 
       toast.success("Thank you for fulfilling this request! 🎉");
       handleClose();
