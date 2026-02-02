@@ -10,12 +10,25 @@ import MessagePlayer from "@/components/MessagePlayer";
 import Leaderboard from "@/components/Leaderboard";
 import GlobalCounter from "@/components/GlobalCounter";
 import NotificationBell from "@/components/NotificationBell";
+import VoiceRequestForm from "@/components/VoiceRequestForm";
+import VoiceRequestSuggestions from "@/components/VoiceRequestSuggestions";
+import RecordForRequestDialog from "@/components/RecordForRequestDialog";
+
+interface VoiceRequest {
+  id: string;
+  requester_id: string;
+  topic: string;
+  created_at: string;
+  requester_username?: string;
+}
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedRequest, setSelectedRequest] = useState<VoiceRequest | null>(null);
+  const [recordDialogOpen, setRecordDialogOpen] = useState(false);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -72,6 +85,11 @@ const Dashboard = () => {
   };
 
   const badge = getBadge(profile?.message_count || 0);
+
+  const handleRecordForRequest = (request: VoiceRequest) => {
+    setSelectedRequest(request);
+    setRecordDialogOpen(true);
+  };
 
   if (loading) {
     return (
@@ -187,12 +205,26 @@ const Dashboard = () => {
           <MessagePlayer userId={user?.id} />
         </div>
 
+        {/* Voice Requests Section */}
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <VoiceRequestForm userId={user?.id || ""} />
+          <VoiceRequestSuggestions userId={user?.id || ""} onRecordForRequest={handleRecordForRequest} />
+        </div>
+
         {/* Stats Section */}
         <div className="max-w-5xl mx-auto space-y-8">
           <GlobalCounter />
           <Leaderboard />
         </div>
       </main>
+
+      {/* Record for Request Dialog */}
+      <RecordForRequestDialog
+        request={selectedRequest}
+        userId={user?.id || ""}
+        open={recordDialogOpen}
+        onOpenChange={setRecordDialogOpen}
+      />
 
       {/* Footer */}
       <footer className="py-8 text-center text-white/70 text-sm">
