@@ -228,6 +228,39 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_message_requests: {
+        Row: {
+          created_at: string
+          fulfilled_at: string | null
+          fulfilled_by: string | null
+          id: string
+          is_fulfilled: boolean
+          recipient_id: string | null
+          requester_id: string
+          topic: string
+        }
+        Insert: {
+          created_at?: string
+          fulfilled_at?: string | null
+          fulfilled_by?: string | null
+          id?: string
+          is_fulfilled?: boolean
+          recipient_id?: string | null
+          requester_id: string
+          topic: string
+        }
+        Update: {
+          created_at?: string
+          fulfilled_at?: string | null
+          fulfilled_by?: string | null
+          id?: string
+          is_fulfilled?: boolean
+          recipient_id?: string | null
+          requester_id?: string
+          topic?: string
+        }
+        Relationships: []
+      }
       voice_messages: {
         Row: {
           audio_url: string
