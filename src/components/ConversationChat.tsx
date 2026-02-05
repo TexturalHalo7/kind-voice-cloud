@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Mic, Square, Play, Pause } from "lucide-react";
+import { ArrowLeft, Send, Play, Pause } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface Message {
@@ -29,11 +29,8 @@ const ConversationChat = ({ conversationId, userId, onBack }: ConversationChatPr
   const [otherUserName, setOtherUserName] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const fetchConversation = async () => {
@@ -178,98 +175,6 @@ const ConversationChat = ({ conversationId, userId, onBack }: ConversationChatPr
     setSending(false);
   };
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        stream.getTracks().forEach((track) => track.stop());
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        await uploadAndSendVoice(audioBlob);
-      };
-
-      mediaRecorder.start(1000);
-      setIsRecording(true);
-    } catch (error) {
-      console.error("Error starting recording:", error);
-      toast.error("Could not access microphone");
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-    }
-  };
-
-  const uploadAndSendVoice = async (audioBlob: Blob) => {
-    setSending(true);
-    const tempId = `temp-voice-${Date.now()}`;
-    
-    try {
-      const fileName = `chat/${userId}/${Date.now()}.webm`;
-      const { error: uploadError } = await supabase.storage
-        .from("voice_messages")
-        .upload(fileName, audioBlob, { contentType: "audio/webm" });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("voice_messages")
-        .getPublicUrl(fileName);
-
-      // Optimistic update for voice message
-      const optimisticMessage: Message = {
-        id: tempId,
-        sender_id: userId,
-        content: null,
-        audio_url: publicUrl,
-        message_type: "voice",
-        is_read: false,
-        created_at: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, optimisticMessage]);
-
-      const { data, error } = await supabase
-        .from("conversation_messages")
-        .insert({
-          conversation_id: conversationId,
-          sender_id: userId,
-          audio_url: publicUrl,
-          message_type: "voice",
-        })
-        .select()
-        .single();
-
-      if (error) {
-        setMessages((prev) => prev.filter((m) => m.id !== tempId));
-        throw error;
-      }
-      
-      if (data) {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === tempId ? data : m))
-        );
-      }
-      
-      toast.success("Voice message sent!");
-    } catch (error: any) {
-      console.error("Error sending voice message:", error);
-      toast.error("Failed to send voice message");
-    }
-    setSending(false);
-  };
-
   const playAudio = (audioUrl: string) => {
     if (audioRef.current) {
       if (playingAudio === audioUrl) {
@@ -369,37 +274,22 @@ const ConversationChat = ({ conversationId, userId, onBack }: ConversationChatPr
       {/* Input Area */}
       <div className="p-4 border-t">
         <form onSubmit={sendTextMessage} className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant={isRecording ? "destructive" : "outline"}
-            size="icon"
-            onClick={isRecording ? stopRecording : startRecording}
-            disabled={sending}
-            className="shrink-0"
-          >
-            {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-          </Button>
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            disabled={sending || isRecording}
+            disabled={sending}
             className="flex-1"
           />
           <Button
             type="submit"
-            disabled={!newMessage.trim() || sending || isRecording}
+            disabled={!newMessage.trim() || sending}
             size="icon"
             className="shrink-0"
           >
             <Send className="w-4 h-4" />
           </Button>
         </form>
-        {isRecording && (
-          <p className="text-sm text-center text-destructive mt-2 animate-pulse">
-            Recording... Click the stop button when done
-          </p>
-        )}
       </div>
     </div>
   );
