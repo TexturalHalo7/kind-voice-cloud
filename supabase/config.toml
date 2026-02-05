@@ -1,4 +1,7 @@
 project_id = "ifygopqbcecklojpippj"
 
 [functions.moderate-voice]
-verify_jwt = true
+verify_jwt = false
+
+[functions.transcribe-audio]
+verify_jwt = false
