@@ -138,6 +138,44 @@ const RecordForRequestDialog = ({
         .eq("user_id", userId)
         .single();
 
+      // Create or find conversation between fulfiller and requester
+      let conversationId: string;
+      const { data: existingConvo } = await supabase
+        .from("conversations")
+        .select("id")
+        .or(
+          `and(participant_one_id.eq.${userId},participant_two_id.eq.${request.requester_id}),and(participant_one_id.eq.${request.requester_id},participant_two_id.eq.${userId})`
+        )
+        .maybeSingle();
+
+      if (existingConvo) {
+        conversationId = existingConvo.id;
+      } else {
+        const { data: newConvo, error: convoError } = await supabase
+          .from("conversations")
+          .insert({
+            participant_one_id: userId,
+            participant_two_id: request.requester_id,
+            original_voice_message_id: voiceMessage.id,
+          })
+          .select("id")
+          .single();
+        if (convoError) throw convoError;
+        conversationId = newConvo.id;
+      }
+
+      // Send the audio as a conversation message
+      const { error: msgError } = await supabase
+        .from("conversation_messages")
+        .insert({
+          conversation_id: conversationId,
+          sender_id: userId,
+          content: `Voice response to: "${request.topic}"`,
+          audio_url: publicUrl,
+          message_type: "voice",
+        });
+      if (msgError) throw msgError;
+
       // Create notification for the requester with the audio
       const { error: notifError } = await supabase
         .from("notifications")
