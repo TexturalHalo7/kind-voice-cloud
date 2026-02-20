@@ -18,7 +18,6 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [moderating, setModerating] = useState(false);
   const [chosenMimeType, setChosenMimeType] = useState<string>("");
   const [fileExt, setFileExt] = useState<string>("webm");
   const [backgroundMusic, setBackgroundMusic] = useState<'none' | 'gentle-waves' | 'soft-hum' | 'peaceful-chimes' | 'nature-sounds'>('none');
@@ -26,7 +25,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [mixingAudio, setMixingAudio] = useState(false);
-  const [hasAudioActivity, setHasAudioActivity] = useState(false);
+  
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -77,10 +76,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         const rms = Math.sqrt(sum / data.length);
         setMeterLevel(rms);
         
-        // Track if there's meaningful audio activity (above threshold)
-        if (rms > 0.02) {
-          setHasAudioActivity(true);
-        }
+        
         
         rafIdRef.current = requestAnimationFrame(loop);
       };
@@ -162,7 +158,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
       console.log("MediaRecorder started, state:", mediaRecorder.state);
       setIsRecording(true);
       setRecordingStartTime(Date.now());
-      setHasAudioActivity(false); // Reset audio activity tracking
+      
       toast.info("Recording started! Speak from your heart 💖");
     } catch (error) {
       toast.error("Could not access microphone. Please grant permission.");
@@ -188,61 +184,9 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
     const finalBlob = previewBlob || audioBlob;
     if (!finalBlob) return;
 
-    // Check if there was any audio activity during recording
-    if (!hasAudioActivity) {
-      toast.error("No speech detected in your recording. Please speak into the microphone.");
-      return;
-    }
-
-    setModerating(true);
+    setUploading(true);
 
     try {
-      // Step 1: Transcribe the audio
-      toast.info("Checking your message...");
-      
-      const transcribeFormData = new FormData();
-      transcribeFormData.append('audio', finalBlob, 'recording.wav');
-      
-      const transcribeResponse = await supabase.functions.invoke('transcribe-audio', {
-        body: transcribeFormData,
-      });
-
-      if (transcribeResponse.error) {
-        console.error('Transcription error:', transcribeResponse.error);
-        throw new Error('Failed to process audio');
-      }
-
-      const transcript = transcribeResponse.data?.transcript || '';
-      console.log('Transcript:', transcript);
-
-      if (!transcript || transcript.length < 5) {
-        toast.error("Couldn't detect clear speech. Please speak more clearly.");
-        setModerating(false);
-        return;
-      }
-
-      // Step 2: Moderate the transcript
-      const moderateResponse = await supabase.functions.invoke('moderate-voice', {
-        body: { transcript },
-      });
-
-      if (moderateResponse.error) {
-        console.error('Moderation error:', moderateResponse.error);
-        throw new Error('Failed to check message content');
-      }
-
-      const moderationResult = moderateResponse.data;
-      
-      if (!moderationResult.isAppropriate) {
-        toast.error(moderationResult.reason || "Your message doesn't align with our kindness policy. Please share positive words.");
-        setModerating(false);
-        return;
-      }
-
-      setModerating(false);
-      setUploading(true);
-
-      // Step 3: Upload the approved message
       toast.info("Uploading your message...");
       
       const fileName = `${userId}-${Date.now()}.wav`;
@@ -280,7 +224,6 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
       toast.error("Failed to upload message: " + error.message);
     } finally {
       setUploading(false);
-      setModerating(false);
     }
   };
 
@@ -407,11 +350,11 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
               <div className="flex gap-3">
                 <Button
                   onClick={uploadRecording}
-                  disabled={uploading || mixingAudio || moderating}
+                  disabled={uploading || mixingAudio}
                   className="flex-1 bg-gradient-to-r from-primary via-accent to-secondary hover:opacity-90 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  {moderating ? "Checking content..." : uploading ? "Uploading..." : "Share This Message"}
+                  {uploading ? "Uploading..." : "Share This Message"}
                 </Button>
                 <Button
                   onClick={() => {
@@ -420,7 +363,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
                   }}
                   variant="outline"
                   className="rounded-xl border-2 hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive transition-all duration-300"
-                  disabled={mixingAudio || moderating || uploading}
+                  disabled={mixingAudio || uploading}
                 >
                   Discard
                 </Button>
@@ -434,8 +377,6 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
               : audioBlob
               ? mixingAudio
                 ? "Processing your audio..."
-                : moderating
-                ? "🔍 Checking your message for positivity..."
                 : backgroundMusic !== 'none'
                 ? "Listen to your message with background music!"
                 : "Listen to your message and share it!"
