@@ -112,7 +112,7 @@ export const mixAudioFiles = async (
   voiceBlob: Blob,
   backgroundBlob: Blob | null,
   voiceVolume: number = 1.0,
-  backgroundVolume: number = 0.3
+  backgroundVolume: number = 0.5
 ): Promise<Blob> => {
   if (!backgroundBlob) return voiceBlob;
 
