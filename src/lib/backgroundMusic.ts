@@ -14,78 +14,164 @@ export const generateBackgroundMusic = async (
     
     switch (type) {
       case 'gentle-waves': {
-        // Gentle waves with slow oscillation
+        // Ocean waves: filtered noise with slow amplitude envelope
+        // Use seeded random for consistency
+        let noiseState = 0.5 + channel * 0.1;
+        const pseudoRand = () => {
+          noiseState = (noiseState * 16807 + 0.5) % 1;
+          return noiseState * 2 - 1;
+        };
+        // Simple lowpass state
+        let lpState = 0;
+        const lpAlpha = 0.002; // very low cutoff for ocean rumble
+
         for (let i = 0; i < channelData.length; i++) {
           const t = i / sampleRate;
-          const wave1 = Math.sin(2 * Math.PI * 220 * t) * 0.05; // A3
-          const wave2 = Math.sin(2 * Math.PI * 330 * t) * 0.03; // E4
-          const lfo = Math.sin(2 * Math.PI * 0.2 * t) * 0.5 + 0.5; // Slow modulation
-          channelData[i] = (wave1 + wave2) * lfo;
+          const raw = pseudoRand();
+          lpState += lpAlpha * (raw - lpState);
+
+          // Wave cycle ~8s: swell up and crash down
+          const waveCycle = 8;
+          const phase = (t % waveCycle) / waveCycle;
+          // Swell envelope: slow rise then faster fall
+          const swell = phase < 0.6
+            ? Math.sin((phase / 0.6) * Math.PI * 0.5) // rise
+            : Math.cos(((phase - 0.6) / 0.4) * Math.PI * 0.5); // fall
+
+          // Layer a second longer cycle for variety
+          const bigCycle = Math.sin(2 * Math.PI * t / 20) * 0.3 + 0.7;
+
+          channelData[i] = lpState * swell * bigCycle * 0.45;
         }
         break;
       }
       case 'soft-hum': {
-        // Soft humming drone
+        // Rich harmonic hum with vibrato and warmth
         for (let i = 0; i < channelData.length; i++) {
           const t = i / sampleRate;
-          const hum1 = Math.sin(2 * Math.PI * 174 * t) * 0.04; // F3
-          const hum2 = Math.sin(2 * Math.PI * 261.63 * t) * 0.03; // C4
-          const fade = Math.min(1, t / 2); // Fade in over 2 seconds
-          channelData[i] = (hum1 + hum2) * fade;
+          const fade = Math.min(1, t / 3); // 3s fade in
+
+          // Vibrato
+          const vibrato = Math.sin(2 * Math.PI * 5 * t) * 3; // 5 Hz, ±3 Hz
+          const baseFreq = 130; // C3 - warm low hum
+
+          // Fundamental + harmonics for vocal-like hum
+          const f = baseFreq + vibrato;
+          const h1 = Math.sin(2 * Math.PI * f * t) * 0.08;
+          const h2 = Math.sin(2 * Math.PI * f * 2 * t) * 0.05;
+          const h3 = Math.sin(2 * Math.PI * f * 3 * t) * 0.03;
+          const h4 = Math.sin(2 * Math.PI * f * 4 * t) * 0.015;
+          const h5 = Math.sin(2 * Math.PI * f * 5 * t) * 0.008;
+
+          // Slow breathing modulation
+          const breath = Math.sin(2 * Math.PI * 0.15 * t) * 0.25 + 0.75;
+
+          channelData[i] = (h1 + h2 + h3 + h4 + h5) * fade * breath;
         }
         break;
       }
       case 'peaceful-chimes': {
-        // Peaceful chimes with gentle reverb simulation
+        // Wind chimes: metallic tones with inharmonic partials and long decay
+        const chimeNotes = [
+          { freq: 523.25, decay: 1.2 },  // C5
+          { freq: 587.33, decay: 1.0 },  // D5
+          { freq: 659.25, decay: 1.3 },  // E5
+          { freq: 783.99, decay: 0.9 },  // G5
+          { freq: 880.00, decay: 1.1 },  // A5
+          { freq: 1046.50, decay: 0.8 }, // C6
+          { freq: 1174.66, decay: 0.7 }, // D6
+        ];
+
+        // Pre-compute chime hit times using deterministic pattern
+        const hits: { time: number; noteIdx: number }[] = [];
+        let hitTime = 0.5 + channel * 0.15;
+        let seedVal = 42 + channel;
+        const nextSeed = () => {
+          seedVal = (seedVal * 1103515245 + 12345) & 0x7fffffff;
+          return seedVal / 0x7fffffff;
+        };
+        while (hitTime < durationSeconds) {
+          hits.push({ time: hitTime, noteIdx: Math.floor(nextSeed() * chimeNotes.length) });
+          hitTime += 1.5 + nextSeed() * 3.5; // 1.5–5s apart
+        }
+
         for (let i = 0; i < channelData.length; i++) {
           const t = i / sampleRate;
           let sample = 0;
-          
-          // Create chime hits at intervals
-          const chimeInterval = 3; // seconds
-          const numChimes = Math.floor(durationSeconds / chimeInterval);
-          
-          for (let c = 0; c < numChimes; c++) {
-            const chimeTime = c * chimeInterval;
-            if (t >= chimeTime) {
-              const timeSinceChime = t - chimeTime;
-              const envelope = Math.exp(-timeSinceChime * 0.8); // Decay
-              sample += Math.sin(2 * Math.PI * 523.25 * timeSinceChime) * envelope * 0.03; // C5
-              sample += Math.sin(2 * Math.PI * 659.25 * timeSinceChime) * envelope * 0.02; // E5
-            }
+
+          for (const hit of hits) {
+            if (t < hit.time) continue;
+            const dt = t - hit.time;
+            if (dt > 6) continue; // skip expired chimes
+            const note = chimeNotes[hit.noteIdx];
+            const env = Math.exp(-dt * note.decay);
+            if (env < 0.001) continue;
+            // Metallic: fundamental + slightly inharmonic partials
+            sample += Math.sin(2 * Math.PI * note.freq * dt) * env * 0.06;
+            sample += Math.sin(2 * Math.PI * note.freq * 2.76 * dt) * env * 0.02;
+            sample += Math.sin(2 * Math.PI * note.freq * 5.4 * dt) * env * 0.008;
           }
-          
+
           channelData[i] = sample;
         }
         break;
       }
       case 'nature-sounds': {
-        // Nature sounds with birds, wind, and rustling
+        // Nature: layered wind noise + bird chirps + gentle crickets
+        let noiseState = 0.3 + channel * 0.2;
+        const pseudoRand = () => {
+          noiseState = (noiseState * 16807 + 0.5) % 1;
+          return noiseState * 2 - 1;
+        };
+        let lpWind = 0;
+
+        // Pre-compute bird chirp times
+        const chirps: { time: number; freqBase: number; duration: number }[] = [];
+        let chirpSeed = 77 + channel;
+        const nextChirpSeed = () => {
+          chirpSeed = (chirpSeed * 1103515245 + 12345) & 0x7fffffff;
+          return chirpSeed / 0x7fffffff;
+        };
+        let ct = 2 + nextChirpSeed() * 3;
+        while (ct < durationSeconds) {
+          const numNotes = 2 + Math.floor(nextChirpSeed() * 4); // 2-5 note chirp
+          for (let n = 0; n < numNotes; n++) {
+            chirps.push({
+              time: ct + n * 0.08,
+              freqBase: 2500 + nextChirpSeed() * 2000,
+              duration: 0.04 + nextChirpSeed() * 0.06,
+            });
+          }
+          ct += 3 + nextChirpSeed() * 6;
+        }
+
         for (let i = 0; i < channelData.length; i++) {
           const t = i / sampleRate;
           let sample = 0;
-          
-          // Wind (low frequency noise)
-          const windFreq = 80 + Math.sin(2 * Math.PI * 0.1 * t) * 20;
-          sample += Math.sin(2 * Math.PI * windFreq * t) * 0.02;
-          
-          // Bird chirps at random intervals
-          const birdInterval = 4; // seconds between bird sounds
-          const numBirds = Math.floor(durationSeconds / birdInterval);
-          
-          for (let b = 0; b < numBirds; b++) {
-            const birdTime = b * birdInterval + (channel * 0.3); // Slight stereo offset
-            if (t >= birdTime && t < birdTime + 0.5) {
-              const timeSinceBird = t - birdTime;
-              const chirpEnv = Math.exp(-timeSinceBird * 8);
-              const chirpFreq = 2000 + Math.sin(timeSinceBird * 100) * 500;
-              sample += Math.sin(2 * Math.PI * chirpFreq * timeSinceBird) * chirpEnv * 0.04;
-            }
+
+          // Wind: filtered noise with slow modulation
+          const raw = pseudoRand();
+          const windCutoff = 0.003 + Math.sin(2 * Math.PI * 0.08 * t) * 0.001;
+          lpWind += windCutoff * (raw - lpWind);
+          const windVol = 0.2 + Math.sin(2 * Math.PI * 0.05 * t) * 0.1;
+          sample += lpWind * windVol;
+
+          // Bird chirps
+          for (const chirp of chirps) {
+            if (t < chirp.time || t > chirp.time + chirp.duration) continue;
+            const dt = t - chirp.time;
+            const env = Math.sin((dt / chirp.duration) * Math.PI); // bell envelope
+            const sweep = chirp.freqBase + dt * 8000; // upward sweep
+            sample += Math.sin(2 * Math.PI * sweep * dt) * env * 0.06;
           }
-          
-          // Rustling (higher frequency subtle noise)
-          sample += (Math.random() - 0.5) * 0.015;
-          
+
+          // Crickets: high-freq pulsing in background
+          const cricketRate = 12; // pulses per second
+          const cricketEnv = Math.sin(2 * Math.PI * cricketRate * t);
+          if (cricketEnv > 0.3) {
+            sample += Math.sin(2 * Math.PI * 4500 * t) * (cricketEnv - 0.3) * 0.015;
+          }
+
           channelData[i] = sample;
         }
         break;
