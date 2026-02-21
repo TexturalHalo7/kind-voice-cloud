@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface LeaderboardEntry {
   username: string;
+  user_id: string;
   message_count: number;
   monthly_message_count: number;
 }
@@ -14,6 +15,13 @@ const Leaderboard = () => {
   const [allTimeLeaders, setAllTimeLeaders] = useState<LeaderboardEntry[]>([]);
   const [monthlyLeaders, setMonthlyLeaders] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCurrentUserId(session?.user?.id || null);
+    });
+  }, []);
 
   useEffect(() => {
     const fetchLeaderboards = async () => {
@@ -80,10 +88,15 @@ const Leaderboard = () => {
       <div className="space-y-3">
         {leaders.map((leader, index) => {
           const count = isMonthly ? leader.monthly_message_count : leader.message_count;
+          const isCurrentUser = leader.user_id === currentUserId;
           return (
             <div
               key={leader.username}
-              className="flex items-center gap-4 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+              className={`flex items-center gap-4 p-4 rounded-xl transition-colors ${
+                isCurrentUser
+                  ? "bg-primary/30 hover:bg-primary/40 ring-1 ring-primary/50"
+                  : "bg-muted/50 hover:bg-muted"
+              }`}
             >
               <div className="flex-shrink-0">{getIcon(index)}</div>
               <div className="flex-1 min-w-0">
