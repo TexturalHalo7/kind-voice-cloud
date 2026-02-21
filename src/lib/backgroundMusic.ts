@@ -1,7 +1,7 @@
 // Generate calming background music tones using Web Audio API
 export const generateBackgroundMusic = async (
   durationSeconds: number,
-  type: 'none' | 'peaceful-chimes' | 'nature-sounds'
+  type: 'none' | 'gentle-waves' | 'peaceful-chimes' | 'nature-sounds'
 ): Promise<Blob | null> => {
   if (type === 'none') return null;
 
@@ -13,6 +13,30 @@ export const generateBackgroundMusic = async (
     const channelData = buffer.getChannelData(channel);
     
     switch (type) {
+      case 'gentle-waves': {
+        // Ocean waves: layered sine waves with swooshing envelope
+        for (let i = 0; i < channelData.length; i++) {
+          const t = i / sampleRate;
+          const wave1 = Math.sin(2 * Math.PI * t / 7) * 0.5 + 0.5;
+          const wave2 = Math.sin(2 * Math.PI * t / 11 + 0.3) * 0.5 + 0.5;
+          const wave3 = Math.sin(2 * Math.PI * t / 5 + 1.2) * 0.5 + 0.5;
+          const envelope = wave1 * 0.5 + wave2 * 0.3 + wave3 * 0.2;
+
+          let noise = 0;
+          noise += Math.sin(2 * Math.PI * 100 * t + channel) * 0.15;
+          noise += Math.sin(2 * Math.PI * 153.7 * t + 2.1) * 0.12;
+          noise += Math.sin(2 * Math.PI * 207.3 * t + 4.3) * 0.10;
+          noise += Math.sin(2 * Math.PI * 263.1 * t + 1.7) * 0.08;
+          noise += Math.sin(2 * Math.PI * 331.5 * t + 3.2) * 0.06;
+          noise += Math.sin(2 * Math.PI * 418.9 * t + 5.1) * 0.05;
+          noise += Math.sin(2 * Math.PI * 521.3 * t + 0.9) * 0.04;
+          noise += Math.sin(2 * Math.PI * 637.7 * t + 2.8) * 0.03;
+
+          const fade = Math.min(1, t / 2);
+          channelData[i] = noise * envelope * fade * 0.7;
+        }
+        break;
+      }
       case 'peaceful-chimes': {
         // Wind chimes: metallic tones with inharmonic partials and long decay
         const chimeNotes = [
