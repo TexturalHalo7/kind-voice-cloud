@@ -14,59 +14,59 @@ export const generateBackgroundMusic = async (
     
     switch (type) {
       case 'gentle-waves': {
-        // Ocean waves: filtered noise with slow amplitude envelope
-        // Use seeded random for consistency
-        let noiseState = 0.5 + channel * 0.1;
-        const pseudoRand = () => {
-          noiseState = (noiseState * 16807 + 0.5) % 1;
-          return noiseState * 2 - 1;
-        };
-        // Simple lowpass state
-        let lpState = 0;
-        const lpAlpha = 0.002; // very low cutoff for ocean rumble
-
+        // Ocean waves using multiple layered sine waves for a swooshing effect
         for (let i = 0; i < channelData.length; i++) {
           const t = i / sampleRate;
-          const raw = pseudoRand();
-          lpState += lpAlpha * (raw - lpState);
 
-          // Wave cycle ~8s: swell up and crash down
-          const waveCycle = 8;
-          const phase = (t % waveCycle) / waveCycle;
-          // Swell envelope: slow rise then faster fall
-          const swell = phase < 0.6
-            ? Math.sin((phase / 0.6) * Math.PI * 0.5) // rise
-            : Math.cos(((phase - 0.6) / 0.4) * Math.PI * 0.5); // fall
+          // Wave cycle envelope (~7s period)
+          const wave1 = Math.sin(2 * Math.PI * t / 7) * 0.5 + 0.5;
+          const wave2 = Math.sin(2 * Math.PI * t / 11 + 0.3) * 0.5 + 0.5;
+          const wave3 = Math.sin(2 * Math.PI * t / 5 + 1.2) * 0.5 + 0.5;
+          const envelope = wave1 * 0.5 + wave2 * 0.3 + wave3 * 0.2;
 
-          // Layer a second longer cycle for variety
-          const bigCycle = Math.sin(2 * Math.PI * t / 20) * 0.3 + 0.7;
+          // Generate noise-like texture from many detuned sines
+          let noise = 0;
+          noise += Math.sin(2 * Math.PI * 100 * t + channel) * 0.15;
+          noise += Math.sin(2 * Math.PI * 153.7 * t + 2.1) * 0.12;
+          noise += Math.sin(2 * Math.PI * 207.3 * t + 4.3) * 0.10;
+          noise += Math.sin(2 * Math.PI * 263.1 * t + 1.7) * 0.08;
+          noise += Math.sin(2 * Math.PI * 331.5 * t + 3.2) * 0.06;
+          noise += Math.sin(2 * Math.PI * 418.9 * t + 5.1) * 0.05;
+          noise += Math.sin(2 * Math.PI * 521.3 * t + 0.9) * 0.04;
+          noise += Math.sin(2 * Math.PI * 637.7 * t + 2.8) * 0.03;
 
-          channelData[i] = lpState * swell * bigCycle * 0.45;
+          // Fade in
+          const fade = Math.min(1, t / 2);
+
+          channelData[i] = noise * envelope * fade * 0.7;
         }
         break;
       }
       case 'soft-hum': {
-        // Rich harmonic hum with vibrato and warmth
+        // Warm, resonant hum like someone humming a note
         for (let i = 0; i < channelData.length; i++) {
           const t = i / sampleRate;
-          const fade = Math.min(1, t / 3); // 3s fade in
+          const fade = Math.min(1, t / 2);
 
-          // Vibrato
-          const vibrato = Math.sin(2 * Math.PI * 5 * t) * 3; // 5 Hz, ±3 Hz
-          const baseFreq = 130; // C3 - warm low hum
+          // Slow vibrato for warmth
+          const vibrato = Math.sin(2 * Math.PI * 4.5 * t) * 2;
+          const baseFreq = 150 + vibrato;
 
-          // Fundamental + harmonics for vocal-like hum
-          const f = baseFreq + vibrato;
-          const h1 = Math.sin(2 * Math.PI * f * t) * 0.08;
-          const h2 = Math.sin(2 * Math.PI * f * 2 * t) * 0.05;
-          const h3 = Math.sin(2 * Math.PI * f * 3 * t) * 0.03;
-          const h4 = Math.sin(2 * Math.PI * f * 4 * t) * 0.015;
-          const h5 = Math.sin(2 * Math.PI * f * 5 * t) * 0.008;
+          // Rich harmonics at higher amplitudes
+          const h1 = Math.sin(2 * Math.PI * baseFreq * t) * 0.25;
+          const h2 = Math.sin(2 * Math.PI * baseFreq * 2 * t) * 0.18;
+          const h3 = Math.sin(2 * Math.PI * baseFreq * 3 * t) * 0.10;
+          const h4 = Math.sin(2 * Math.PI * baseFreq * 4 * t) * 0.05;
+          const h5 = Math.sin(2 * Math.PI * baseFreq * 5 * t) * 0.02;
 
-          // Slow breathing modulation
-          const breath = Math.sin(2 * Math.PI * 0.15 * t) * 0.25 + 0.75;
+          // Gentle breathing/pulsing
+          const breath = Math.sin(2 * Math.PI * 0.12 * t) * 0.2 + 0.8;
 
-          channelData[i] = (h1 + h2 + h3 + h4 + h5) * fade * breath;
+          // Subtle second voice a fifth up
+          const f2 = baseFreq * 1.5;
+          const harmony = Math.sin(2 * Math.PI * f2 * t) * 0.08;
+
+          channelData[i] = (h1 + h2 + h3 + h4 + h5 + harmony) * fade * breath;
         }
         break;
       }
