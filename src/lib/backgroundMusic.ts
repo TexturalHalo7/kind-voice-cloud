@@ -1,7 +1,7 @@
 // Generate calming background music tones using Web Audio API
 export const generateBackgroundMusic = async (
   durationSeconds: number,
-  type: 'none' | 'gentle-waves' | 'peaceful-chimes' | 'nature-sounds'
+  type: 'none' | 'peaceful-chimes' | 'nature-sounds'
 ): Promise<Blob | null> => {
   if (type === 'none') return null;
 
@@ -13,30 +13,6 @@ export const generateBackgroundMusic = async (
     const channelData = buffer.getChannelData(channel);
     
     switch (type) {
-      case 'gentle-waves': {
-        // Ocean waves: layered sine waves with swooshing envelope
-        for (let i = 0; i < channelData.length; i++) {
-          const t = i / sampleRate;
-          const wave1 = Math.sin(2 * Math.PI * t / 7) * 0.5 + 0.5;
-          const wave2 = Math.sin(2 * Math.PI * t / 11 + 0.3) * 0.5 + 0.5;
-          const wave3 = Math.sin(2 * Math.PI * t / 5 + 1.2) * 0.5 + 0.5;
-          const envelope = wave1 * 0.5 + wave2 * 0.3 + wave3 * 0.2;
-
-          let noise = 0;
-          noise += Math.sin(2 * Math.PI * 100 * t + channel) * 0.15;
-          noise += Math.sin(2 * Math.PI * 153.7 * t + 2.1) * 0.12;
-          noise += Math.sin(2 * Math.PI * 207.3 * t + 4.3) * 0.10;
-          noise += Math.sin(2 * Math.PI * 263.1 * t + 1.7) * 0.08;
-          noise += Math.sin(2 * Math.PI * 331.5 * t + 3.2) * 0.06;
-          noise += Math.sin(2 * Math.PI * 418.9 * t + 5.1) * 0.05;
-          noise += Math.sin(2 * Math.PI * 521.3 * t + 0.9) * 0.04;
-          noise += Math.sin(2 * Math.PI * 637.7 * t + 2.8) * 0.03;
-
-          const fade = Math.min(1, t / 2);
-          channelData[i] = noise * envelope * fade * 0.7;
-        }
-        break;
-      }
       case 'peaceful-chimes': {
         // Wind chimes: metallic tones with inharmonic partials and long decay
         const chimeNotes = [
@@ -74,9 +50,9 @@ export const generateBackgroundMusic = async (
             const env = Math.exp(-dt * note.decay);
             if (env < 0.001) continue;
             // Metallic: fundamental + slightly inharmonic partials
-            sample += Math.sin(2 * Math.PI * note.freq * dt) * env * 0.06;
-            sample += Math.sin(2 * Math.PI * note.freq * 2.76 * dt) * env * 0.02;
-            sample += Math.sin(2 * Math.PI * note.freq * 5.4 * dt) * env * 0.008;
+            sample += Math.sin(2 * Math.PI * note.freq * dt) * env * 0.03;
+            sample += Math.sin(2 * Math.PI * note.freq * 2.76 * dt) * env * 0.01;
+            sample += Math.sin(2 * Math.PI * note.freq * 5.4 * dt) * env * 0.004;
           }
 
           channelData[i] = sample;
@@ -120,7 +96,7 @@ export const generateBackgroundMusic = async (
           const raw = pseudoRand();
           const windCutoff = 0.003 + Math.sin(2 * Math.PI * 0.08 * t) * 0.001;
           lpWind += windCutoff * (raw - lpWind);
-          const windVol = 0.2 + Math.sin(2 * Math.PI * 0.05 * t) * 0.1;
+          const windVol = 0.1 + Math.sin(2 * Math.PI * 0.05 * t) * 0.05;
           sample += lpWind * windVol;
 
           // Bird chirps
@@ -129,14 +105,14 @@ export const generateBackgroundMusic = async (
             const dt = t - chirp.time;
             const env = Math.sin((dt / chirp.duration) * Math.PI); // bell envelope
             const sweep = chirp.freqBase + dt * 8000; // upward sweep
-            sample += Math.sin(2 * Math.PI * sweep * dt) * env * 0.06;
+            sample += Math.sin(2 * Math.PI * sweep * dt) * env * 0.03;
           }
 
           // Crickets: high-freq pulsing in background
           const cricketRate = 12; // pulses per second
           const cricketEnv = Math.sin(2 * Math.PI * cricketRate * t);
           if (cricketEnv > 0.3) {
-            sample += Math.sin(2 * Math.PI * 4500 * t) * (cricketEnv - 0.3) * 0.015;
+            sample += Math.sin(2 * Math.PI * 4500 * t) * (cricketEnv - 0.3) * 0.008;
           }
 
           channelData[i] = sample;
