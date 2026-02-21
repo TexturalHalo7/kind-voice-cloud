@@ -20,7 +20,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [uploading, setUploading] = useState(false);
   const [chosenMimeType, setChosenMimeType] = useState<string>("");
   const [fileExt, setFileExt] = useState<string>("webm");
-  const [backgroundMusic, setBackgroundMusic] = useState<'none' | 'peaceful-chimes' | 'nature-sounds'>('none');
+  const [backgroundMusic, setBackgroundMusic] = useState<'none' | 'gentle-waves' | 'peaceful-chimes' | 'nature-sounds'>('none');
   const [category, setCategory] = useState<MessageCategory>("general");
   const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
@@ -269,6 +269,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
                 </SelectTrigger>
                 <SelectContent className="bg-background z-50">
                   <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="gentle-waves">Gentle Waves</SelectItem>
                   <SelectItem value="peaceful-chimes">Peaceful Chimes</SelectItem>
                   <SelectItem value="nature-sounds">Nature Sounds</SelectItem>
                 </SelectContent>
