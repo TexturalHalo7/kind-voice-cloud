@@ -116,29 +116,14 @@ const Auth = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAuth} className="space-y-4">
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Your unique username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                    className="rounded-xl"
-                  />
-                </div>
-              )}
-
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  type="text"
+                  placeholder="Your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                   className="rounded-xl"
                 />
