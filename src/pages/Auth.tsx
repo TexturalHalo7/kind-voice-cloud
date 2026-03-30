@@ -42,6 +42,7 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      const email = `${username.toLowerCase().trim()}@voicesofkindness.app`;
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
           email,
