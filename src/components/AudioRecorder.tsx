@@ -264,17 +264,29 @@ const AudioRecorder = ({ userId, isPremium = false, onUpgrade }: AudioRecorderPr
               <label className="text-sm font-medium flex items-center gap-2">
                 <Music className="w-4 h-4 text-primary" />
                 Background Music
+                {!isPremium && <Crown className="w-3 h-3 text-amber-500" />}
               </label>
-              <Select value={backgroundMusic} onValueChange={(v: any) => setBackgroundMusic(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select background music" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="peaceful-chimes">Peaceful Chimes</SelectItem>
-                  <SelectItem value="nature-sounds">Nature Sounds</SelectItem>
-                </SelectContent>
-              </Select>
+              {isPremium ? (
+                <Select value={backgroundMusic} onValueChange={(v: any) => setBackgroundMusic(v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select background music" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="peaceful-chimes">Peaceful Chimes</SelectItem>
+                    <SelectItem value="nature-sounds">Nature Sounds</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-muted-foreground"
+                  onClick={() => onUpgrade?.()}
+                >
+                  <Crown className="w-4 h-4 mr-2 text-amber-500" />
+                  Upgrade to Premium to unlock
+                </Button>
+              )}
             </div>
           </>
         )}
