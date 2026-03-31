@@ -233,8 +233,8 @@ const Dashboard = () => {
 
         {/* Main Actions Grid */}
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          <AudioRecorder userId={user?.id || ""} />
-          <MessagePlayer userId={user?.id} />
+          <AudioRecorder userId={user?.id || ""} isPremium={isPremium} onUpgrade={handleUpgrade} />
+          <MessagePlayer userId={user?.id} isPremium={isPremium} onUpgrade={handleUpgrade} />
         </div>
 
         {/* Voice Requests Section */}
