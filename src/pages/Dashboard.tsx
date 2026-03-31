@@ -25,11 +25,13 @@ interface VoiceRequest {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<VoiceRequest | null>(null);
   const [recordDialogOpen, setRecordDialogOpen] = useState(false);
+  const { isPremium, handleUpgrade, handleManageSubscription, refresh: refreshPremium } = usePremium();
 
   useEffect(() => {
     const checkUser = async () => {
