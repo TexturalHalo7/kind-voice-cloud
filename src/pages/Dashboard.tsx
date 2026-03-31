@@ -179,6 +179,29 @@ const Dashboard = () => {
               <MessageCircle className="w-5 h-5" />
             </Button>
             
+            {!isPremium ? (
+              <Button
+                onClick={handleUpgrade}
+                variant="secondary"
+                size="sm"
+                className="rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 hover:opacity-90"
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                Go Premium
+              </Button>
+            ) : (
+              <Button
+                onClick={handleManageSubscription}
+                variant="ghost"
+                size="sm"
+                className="text-amber-300 hover:bg-white/20 rounded-full"
+                title="Manage Premium"
+              >
+                <Crown className="w-4 h-4 mr-1" />
+                Premium
+              </Button>
+            )}
+            
             <Button
               onClick={handleLogout}
               variant="secondary"
