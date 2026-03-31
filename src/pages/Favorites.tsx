@@ -136,7 +136,21 @@ const Favorites = () => {
       </header>
 
       <main className="container mx-auto px-4 py-12 max-w-3xl">
-        {favorites.length === 0 ? (
+        {!isPremium ? (
+          <Card className="shadow-glow bg-white/95 backdrop-blur-sm">
+            <CardContent className="py-12 text-center">
+              <Crown className="w-16 h-16 mx-auto text-amber-500 mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Premium Feature</h3>
+              <p className="text-muted-foreground mb-4">
+                Upgrade to Premium to save and revisit your favorite voice messages!
+              </p>
+              <Button onClick={handleUpgrade} className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                <Crown className="w-4 h-4 mr-2" />
+                Go Premium — $4.99/mo
+              </Button>
+            </CardContent>
+          </Card>
+        ) : favorites.length === 0 ? (
           <Card className="shadow-glow bg-white/95 backdrop-blur-sm">
             <CardContent className="py-12 text-center">
               <Heart className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
