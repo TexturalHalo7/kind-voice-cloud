@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Heart, LogOut, Sparkles, Star, User as UserIcon, Flame, BookHeart, MessageCircle } from "lucide-react";
+import { Heart, LogOut, Sparkles, Star, User as UserIcon, Flame, BookHeart, MessageCircle, Crown } from "lucide-react";
 import AudioRecorder from "@/components/AudioRecorder";
 import MessagePlayer from "@/components/MessagePlayer";
 import Leaderboard from "@/components/Leaderboard";
@@ -13,6 +13,7 @@ import NotificationBell from "@/components/NotificationBell";
 import VoiceRequestForm from "@/components/VoiceRequestForm";
 import VoiceRequestSuggestions from "@/components/VoiceRequestSuggestions";
 import RecordForRequestDialog from "@/components/RecordForRequestDialog";
+import { usePremium } from "@/hooks/usePremium";
 
 interface VoiceRequest {
   id: string;
