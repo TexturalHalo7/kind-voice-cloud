@@ -27,7 +27,6 @@ const Favorites = () => {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const { isPremium, handleUpgrade } = usePremium();
-  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const checkUser = async () => {
