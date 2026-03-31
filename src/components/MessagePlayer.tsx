@@ -15,7 +15,7 @@ interface MessagePlayerProps {
 
 type MessageCategory = "all" | "general" | "encouragement" | "gratitude" | "motivation";
 
-const MessagePlayer = ({ userId }: MessagePlayerProps) => {
+const MessagePlayer = ({ userId, isPremium = false, onUpgrade }: MessagePlayerProps) => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState<string>("");
