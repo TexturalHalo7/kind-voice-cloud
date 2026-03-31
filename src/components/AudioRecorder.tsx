@@ -10,6 +10,8 @@ import { generateBackgroundMusic, mixAudioFiles } from "@/lib/backgroundMusic";
 
 interface AudioRecorderProps {
   userId: string;
+  isPremium?: boolean;
+  onUpgrade?: () => void;
 }
 
 type MessageCategory = "general" | "encouragement" | "gratitude" | "motivation";
