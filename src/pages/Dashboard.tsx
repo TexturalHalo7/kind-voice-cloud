@@ -57,6 +57,12 @@ const Dashboard = () => {
 
     checkUser();
 
+    // Handle checkout success
+    if (searchParams.get("checkout") === "success") {
+      toast.success("Welcome to Premium! 🎉");
+      refreshPremium();
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === "SIGNED_OUT") {
