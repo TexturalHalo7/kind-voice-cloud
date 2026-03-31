@@ -16,7 +16,7 @@ interface AudioRecorderProps {
 
 type MessageCategory = "general" | "encouragement" | "gratitude" | "motivation";
 
-const AudioRecorder = ({ userId }: AudioRecorderProps) => {
+const AudioRecorder = ({ userId, isPremium = false, onUpgrade }: AudioRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [uploading, setUploading] = useState(false);

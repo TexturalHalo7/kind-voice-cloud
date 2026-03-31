@@ -9,6 +9,8 @@ import StartConversationButton from "./StartConversationButton";
 
 interface MessagePlayerProps {
   userId?: string;
+  isPremium?: boolean;
+  onUpgrade?: () => void;
 }
 
 type MessageCategory = "all" | "general" | "encouragement" | "gratitude" | "motivation";
