@@ -108,6 +108,11 @@ const MessagePlayer = ({ userId, isPremium = false, onUpgrade }: MessagePlayerPr
   };
 
   const handleFavorite = async () => {
+    if (!isPremium) {
+      toast.error("Favorites is a premium feature ✨", { description: "Upgrade to save your favorite messages!" });
+      onUpgrade?.();
+      return;
+    }
     if (!messageId || !userId) {
       toast.error("Please log in to save favorites");
       return;
