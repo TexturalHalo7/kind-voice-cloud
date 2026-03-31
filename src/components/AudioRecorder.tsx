@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mic, Square, Upload, Music, Tag } from "lucide-react";
+import { Mic, Square, Upload, Music, Tag, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
@@ -10,11 +10,13 @@ import { generateBackgroundMusic, mixAudioFiles } from "@/lib/backgroundMusic";
 
 interface AudioRecorderProps {
   userId: string;
+  isPremium?: boolean;
+  onUpgrade?: () => void;
 }
 
 type MessageCategory = "general" | "encouragement" | "gratitude" | "motivation";
 
-const AudioRecorder = ({ userId }: AudioRecorderProps) => {
+const AudioRecorder = ({ userId, isPremium = false, onUpgrade }: AudioRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -262,17 +264,29 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
               <label className="text-sm font-medium flex items-center gap-2">
                 <Music className="w-4 h-4 text-primary" />
                 Background Music
+                {!isPremium && <Crown className="w-3 h-3 text-amber-500" />}
               </label>
-              <Select value={backgroundMusic} onValueChange={(v: any) => setBackgroundMusic(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select background music" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="peaceful-chimes">Peaceful Chimes</SelectItem>
-                  <SelectItem value="nature-sounds">Nature Sounds</SelectItem>
-                </SelectContent>
-              </Select>
+              {isPremium ? (
+                <Select value={backgroundMusic} onValueChange={(v: any) => setBackgroundMusic(v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select background music" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="peaceful-chimes">Peaceful Chimes</SelectItem>
+                    <SelectItem value="nature-sounds">Nature Sounds</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-muted-foreground"
+                  onClick={() => onUpgrade?.()}
+                >
+                  <Crown className="w-4 h-4 mr-2 text-amber-500" />
+                  Upgrade to Premium to unlock
+                </Button>
+              )}
             </div>
           </>
         )}

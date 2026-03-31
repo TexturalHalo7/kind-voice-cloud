@@ -9,11 +9,13 @@ import StartConversationButton from "./StartConversationButton";
 
 interface MessagePlayerProps {
   userId?: string;
+  isPremium?: boolean;
+  onUpgrade?: () => void;
 }
 
 type MessageCategory = "all" | "general" | "encouragement" | "gratitude" | "motivation";
 
-const MessagePlayer = ({ userId }: MessagePlayerProps) => {
+const MessagePlayer = ({ userId, isPremium = false, onUpgrade }: MessagePlayerProps) => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState<string>("");
@@ -106,6 +108,11 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
   };
 
   const handleFavorite = async () => {
+    if (!isPremium) {
+      toast.error("Favorites is a premium feature ✨", { description: "Upgrade to save your favorite messages!" });
+      onUpgrade?.();
+      return;
+    }
     if (!messageId || !userId) {
       toast.error("Please log in to save favorites");
       return;
