@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Heart, LogOut, Sparkles, Star, User as UserIcon, Flame, BookHeart, MessageCircle, Crown } from "lucide-react";
+import { Heart, LogOut, Sparkles, Star, User as UserIcon, Flame, BookHeart, MessageCircle } from "lucide-react";
 import AudioRecorder from "@/components/AudioRecorder";
 import MessagePlayer from "@/components/MessagePlayer";
 import Leaderboard from "@/components/Leaderboard";
@@ -13,7 +13,7 @@ import NotificationBell from "@/components/NotificationBell";
 import VoiceRequestForm from "@/components/VoiceRequestForm";
 import VoiceRequestSuggestions from "@/components/VoiceRequestSuggestions";
 import RecordForRequestDialog from "@/components/RecordForRequestDialog";
-import { usePremium } from "@/hooks/usePremium";
+
 
 interface VoiceRequest {
   id: string;
@@ -31,7 +31,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<VoiceRequest | null>(null);
   const [recordDialogOpen, setRecordDialogOpen] = useState(false);
-  const { isPremium, handleUpgrade, handleManageSubscription, refresh: refreshPremium } = usePremium();
+  
 
   useEffect(() => {
     const checkUser = async () => {
@@ -59,8 +59,7 @@ const Dashboard = () => {
 
     // Handle checkout success
     if (searchParams.get("checkout") === "success") {
-      toast.success("Welcome to Premium! 🎉");
-      refreshPremium();
+      toast.success("Welcome back! 🎉");
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -179,28 +178,7 @@ const Dashboard = () => {
               <MessageCircle className="w-5 h-5" />
             </Button>
             
-            {!isPremium ? (
-              <Button
-                onClick={handleUpgrade}
-                variant="secondary"
-                size="sm"
-                className="rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 hover:opacity-90"
-              >
-                <Crown className="w-4 h-4 mr-2" />
-                Go Premium
-              </Button>
-            ) : (
-              <Button
-                onClick={handleManageSubscription}
-                variant="ghost"
-                size="sm"
-                className="text-amber-300 hover:bg-white/20 rounded-full"
-                title="Manage Premium"
-              >
-                <Crown className="w-4 h-4 mr-1" />
-                Premium
-              </Button>
-            )}
+            
             
             <Button
               onClick={handleLogout}
@@ -233,8 +211,8 @@ const Dashboard = () => {
 
         {/* Main Actions Grid */}
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          <AudioRecorder userId={user?.id || ""} isPremium={isPremium} onUpgrade={handleUpgrade} />
-          <MessagePlayer userId={user?.id} isPremium={isPremium} onUpgrade={handleUpgrade} />
+          <AudioRecorder userId={user?.id || ""} />
+          <MessagePlayer userId={user?.id} />
         </div>
 
         {/* Voice Requests Section */}
