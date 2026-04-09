@@ -6,7 +6,7 @@ import { Mic, Square, Upload, Music, Tag, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-import { generateBackgroundMusic, mixAudioFiles } from "@/lib/backgroundMusic";
+import { generateBackgroundMusic, mixAudioFiles, BackgroundSoundType, SOUND_LABELS } from "@/lib/backgroundMusic";
 
 interface AudioRecorderProps {
   userId: string;
@@ -22,7 +22,7 @@ const AudioRecorder = ({ userId, isPremium = false, onUpgrade }: AudioRecorderPr
   const [uploading, setUploading] = useState(false);
   const [chosenMimeType, setChosenMimeType] = useState<string>("");
   const [fileExt, setFileExt] = useState<string>("webm");
-  const [backgroundMusic, setBackgroundMusic] = useState<'none' | 'peaceful-chimes' | 'nature-sounds'>('none');
+  const [backgroundMusic, setBackgroundMusic] = useState<BackgroundSoundType>('none');
   const [category, setCategory] = useState<MessageCategory>("general");
   const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
@@ -267,14 +267,14 @@ const AudioRecorder = ({ userId, isPremium = false, onUpgrade }: AudioRecorderPr
                 {!isPremium && <Crown className="w-3 h-3 text-amber-500" />}
               </label>
               {isPremium ? (
-                <Select value={backgroundMusic} onValueChange={(v: any) => setBackgroundMusic(v)}>
+                <Select value={backgroundMusic} onValueChange={(v: BackgroundSoundType) => setBackgroundMusic(v)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select background music" />
+                    <SelectValue placeholder="Select background sound" />
                   </SelectTrigger>
-                  <SelectContent className="bg-background z-50">
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="peaceful-chimes">Peaceful Chimes</SelectItem>
-                    <SelectItem value="nature-sounds">Nature Sounds</SelectItem>
+                  <SelectContent className="bg-background z-50 max-h-60">
+                    {(Object.entries(SOUND_LABELS) as [BackgroundSoundType, string][]).map(([key, label]) => (
+                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               ) : (
