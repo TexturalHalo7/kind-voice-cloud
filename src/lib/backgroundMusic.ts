@@ -1,121 +1,276 @@
-// Generate calming background music tones using Web Audio API
+// Ambient background sound generator using Web Audio API
+
+export type BackgroundSoundType =
+  | 'none'
+  | 'soft-rain'
+  | 'ocean-waves'
+  | 'wind-trees'
+  | 'fireplace'
+  | 'forest-birds'
+  | 'thunder-rain'
+  | 'soft-stream'
+  | 'white-noise'
+  | 'brown-noise'
+  | 'night-crickets'
+  | 'calm-fan'
+  | 'rain-window';
+
+export const SOUND_LABELS: Record<BackgroundSoundType, string> = {
+  'none': 'None',
+  'soft-rain': 'Soft Rain',
+  'ocean-waves': 'Gentle Ocean Waves',
+  'wind-trees': 'Wind Through Trees',
+  'fireplace': 'Fireplace Crackling',
+  'forest-birds': 'Forest / Birds Chirping',
+  'thunder-rain': 'Distant Thunder with Rain',
+  'soft-stream': 'Soft Stream / Flowing Water',
+  'white-noise': 'White Noise',
+  'brown-noise': 'Brown Noise',
+  'night-crickets': 'Night Ambience / Crickets',
+  'calm-fan': 'Calm Fan / Room Ambience',
+  'rain-window': 'Rain on Window',
+};
+
+// Deterministic pseudo-random number generator
+function createRng(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    return s / 0x7fffffff;
+  };
+}
+
 export const generateBackgroundMusic = async (
   durationSeconds: number,
-  type: 'none' | 'peaceful-chimes' | 'nature-sounds'
+  type: BackgroundSoundType
 ): Promise<Blob | null> => {
   if (type === 'none') return null;
 
   const sampleRate = 44100;
+  const length = Math.floor(sampleRate * durationSeconds);
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate });
-  const buffer = audioContext.createBuffer(2, sampleRate * durationSeconds, sampleRate);
+  const buffer = audioContext.createBuffer(2, length, sampleRate);
 
-  for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
-    const channelData = buffer.getChannelData(channel);
-    
+  for (let ch = 0; ch < 2; ch++) {
+    const data = buffer.getChannelData(ch);
+    const rng = createRng(42 + ch);
+
     switch (type) {
-      case 'peaceful-chimes': {
-        // Wind chimes: metallic tones with inharmonic partials and long decay
-        const chimeNotes = [
-          { freq: 523.25, decay: 1.2 },  // C5
-          { freq: 587.33, decay: 1.0 },  // D5
-          { freq: 659.25, decay: 1.3 },  // E5
-          { freq: 783.99, decay: 0.9 },  // G5
-          { freq: 880.00, decay: 1.1 },  // A5
-          { freq: 1046.50, decay: 0.8 }, // C6
-          { freq: 1174.66, decay: 0.7 }, // D6
-        ];
-
-        // Pre-compute chime hit times using deterministic pattern
-        const hits: { time: number; noteIdx: number }[] = [];
-        let hitTime = 0.5 + channel * 0.15;
-        let seedVal = 42 + channel;
-        const nextSeed = () => {
-          seedVal = (seedVal * 1103515245 + 12345) & 0x7fffffff;
-          return seedVal / 0x7fffffff;
-        };
-        while (hitTime < durationSeconds) {
-          hits.push({ time: hitTime, noteIdx: Math.floor(nextSeed() * chimeNotes.length) });
-          hitTime += 1.5 + nextSeed() * 3.5; // 1.5–5s apart
-        }
-
-        for (let i = 0; i < channelData.length; i++) {
+      case 'soft-rain': {
+        // Filtered white noise with gentle amplitude modulation
+        let lp = 0;
+        for (let i = 0; i < length; i++) {
           const t = i / sampleRate;
-          let sample = 0;
-
-          for (const hit of hits) {
-            if (t < hit.time) continue;
-            const dt = t - hit.time;
-            if (dt > 6) continue; // skip expired chimes
-            const note = chimeNotes[hit.noteIdx];
-            const env = Math.exp(-dt * note.decay);
-            if (env < 0.001) continue;
-            // Metallic: fundamental + slightly inharmonic partials
-            sample += Math.sin(2 * Math.PI * note.freq * dt) * env * 0.03;
-            sample += Math.sin(2 * Math.PI * note.freq * 2.76 * dt) * env * 0.01;
-            sample += Math.sin(2 * Math.PI * note.freq * 5.4 * dt) * env * 0.004;
-          }
-
-          channelData[i] = sample;
+          const raw = rng() * 2 - 1;
+          lp += 0.01 * (raw - lp); // low-pass
+          const mod = 0.7 + 0.3 * Math.sin(2 * Math.PI * 0.15 * t);
+          data[i] = lp * mod * 0.12;
         }
         break;
       }
-      case 'nature-sounds': {
-        // Nature: layered wind noise + bird chirps + gentle crickets
-        let noiseState = 0.3 + channel * 0.2;
-        const pseudoRand = () => {
-          noiseState = (noiseState * 16807 + 0.5) % 1;
-          return noiseState * 2 - 1;
-        };
-        let lpWind = 0;
-
-        // Pre-compute bird chirp times
-        const chirps: { time: number; freqBase: number; duration: number }[] = [];
-        let chirpSeed = 77 + channel;
-        const nextChirpSeed = () => {
-          chirpSeed = (chirpSeed * 1103515245 + 12345) & 0x7fffffff;
-          return chirpSeed / 0x7fffffff;
-        };
-        let ct = 2 + nextChirpSeed() * 3;
+      case 'ocean-waves': {
+        // Slow-modulated filtered noise simulating wave crests
+        let lp = 0;
+        for (let i = 0; i < length; i++) {
+          const t = i / sampleRate;
+          const raw = rng() * 2 - 1;
+          lp += 0.004 * (raw - lp);
+          // Wave cycle ~8 seconds
+          const wave = Math.pow(Math.max(0, Math.sin(2 * Math.PI * (1 / 8) * t)), 2);
+          const secondWave = Math.pow(Math.max(0, Math.sin(2 * Math.PI * (1 / 13) * t + 1)), 2) * 0.6;
+          data[i] = lp * (wave + secondWave) * 0.15;
+        }
+        break;
+      }
+      case 'wind-trees': {
+        // Very low-pass noise with slow modulation
+        let lp = 0;
+        let lp2 = 0;
+        for (let i = 0; i < length; i++) {
+          const t = i / sampleRate;
+          const raw = rng() * 2 - 1;
+          lp += 0.002 * (raw - lp);
+          lp2 += 0.008 * (raw - lp2);
+          const mod = 0.5 + 0.5 * Math.sin(2 * Math.PI * 0.07 * t);
+          const gust = Math.max(0, Math.sin(2 * Math.PI * 0.03 * t + ch)) * 0.4;
+          data[i] = (lp * mod + lp2 * gust) * 0.1;
+        }
+        break;
+      }
+      case 'fireplace': {
+        // Crackling: random pops layered over low rumble
+        let lp = 0;
+        const pops = createRng(101 + ch);
+        for (let i = 0; i < length; i++) {
+          const t = i / sampleRate;
+          const raw = rng() * 2 - 1;
+          // Low rumble
+          lp += 0.001 * (raw - lp);
+          let sample = lp * 0.08;
+          // Random crackle pops
+          if (pops() < 0.0003) {
+            const popLen = Math.floor(sampleRate * (0.002 + pops() * 0.01));
+            for (let j = 0; j < popLen && (i + j) < length; j++) {
+              const env = 1 - j / popLen;
+              data[i + j] = (data[i + j] || 0) + (rng() * 2 - 1) * env * 0.08;
+            }
+          }
+          // Warm base tone
+          sample += Math.sin(2 * Math.PI * 60 * t) * 0.01;
+          data[i] += sample;
+        }
+        break;
+      }
+      case 'forest-birds': {
+        // Wind base + periodic bird chirps
+        let lp = 0;
+        const chirpRng = createRng(77 + ch);
+        // Pre-compute chirp events
+        const chirps: { time: number; freq: number; dur: number }[] = [];
+        let ct = 1 + chirpRng() * 2;
         while (ct < durationSeconds) {
-          const numNotes = 2 + Math.floor(nextChirpSeed() * 4); // 2-5 note chirp
-          for (let n = 0; n < numNotes; n++) {
+          const notes = 2 + Math.floor(chirpRng() * 4);
+          for (let n = 0; n < notes; n++) {
             chirps.push({
               time: ct + n * 0.08,
-              freqBase: 2500 + nextChirpSeed() * 2000,
-              duration: 0.04 + nextChirpSeed() * 0.06,
+              freq: 2000 + chirpRng() * 2500,
+              dur: 0.03 + chirpRng() * 0.06,
             });
           }
-          ct += 3 + nextChirpSeed() * 6;
+          ct += 2 + chirpRng() * 5;
         }
-
-        for (let i = 0; i < channelData.length; i++) {
+        for (let i = 0; i < length; i++) {
           const t = i / sampleRate;
-          let sample = 0;
-
-          // Wind: filtered noise with slow modulation
-          const raw = pseudoRand();
-          const windCutoff = 0.003 + Math.sin(2 * Math.PI * 0.08 * t) * 0.001;
-          lpWind += windCutoff * (raw - lpWind);
-          const windVol = 0.1 + Math.sin(2 * Math.PI * 0.05 * t) * 0.05;
-          sample += lpWind * windVol;
-
-          // Bird chirps
-          for (const chirp of chirps) {
-            if (t < chirp.time || t > chirp.time + chirp.duration) continue;
-            const dt = t - chirp.time;
-            const env = Math.sin((dt / chirp.duration) * Math.PI); // bell envelope
-            const sweep = chirp.freqBase + dt * 8000; // upward sweep
-            sample += Math.sin(2 * Math.PI * sweep * dt) * env * 0.03;
+          const raw = rng() * 2 - 1;
+          lp += 0.002 * (raw - lp);
+          let sample = lp * 0.05;
+          for (const c of chirps) {
+            if (t >= c.time && t <= c.time + c.dur) {
+              const dt = t - c.time;
+              const env = Math.sin((dt / c.dur) * Math.PI);
+              sample += Math.sin(2 * Math.PI * (c.freq + dt * 6000) * dt) * env * 0.02;
+            }
           }
-
-          // Crickets: high-freq pulsing in background
-          const cricketRate = 12; // pulses per second
-          const cricketEnv = Math.sin(2 * Math.PI * cricketRate * t);
-          if (cricketEnv > 0.3) {
-            sample += Math.sin(2 * Math.PI * 4500 * t) * (cricketEnv - 0.3) * 0.008;
+          data[i] = sample;
+        }
+        break;
+      }
+      case 'thunder-rain': {
+        // Rain noise + occasional low thunder rumbles
+        let lp = 0;
+        const thunderRng = createRng(200 + ch);
+        // Pre-compute thunder events
+        const thunders: { time: number; dur: number }[] = [];
+        let tt = 4 + thunderRng() * 6;
+        while (tt < durationSeconds) {
+          thunders.push({ time: tt, dur: 2 + thunderRng() * 3 });
+          tt += 8 + thunderRng() * 12;
+        }
+        for (let i = 0; i < length; i++) {
+          const t = i / sampleRate;
+          const raw = rng() * 2 - 1;
+          lp += 0.01 * (raw - lp);
+          let sample = lp * 0.1; // rain
+          for (const th of thunders) {
+            if (t >= th.time && t <= th.time + th.dur) {
+              const dt = t - th.time;
+              const env = Math.sin((dt / th.dur) * Math.PI) * Math.exp(-dt * 0.5);
+              sample += Math.sin(2 * Math.PI * (40 + dt * 10) * dt) * env * 0.06;
+              sample += (rng() * 2 - 1) * env * 0.03;
+            }
           }
-
-          channelData[i] = sample;
+          data[i] = sample;
+        }
+        break;
+      }
+      case 'soft-stream': {
+        // Babbling brook: layered filtered noise with pitch modulation
+        let lp = 0;
+        let hp = 0;
+        let prev = 0;
+        for (let i = 0; i < length; i++) {
+          const t = i / sampleRate;
+          const raw = rng() * 2 - 1;
+          lp += 0.006 * (raw - lp);
+          // High-pass for sparkle
+          hp = 0.95 * (hp + lp - prev);
+          prev = lp;
+          const mod = 0.6 + 0.4 * Math.sin(2 * Math.PI * 0.3 * t);
+          const bubble = Math.sin(2 * Math.PI * (800 + 200 * Math.sin(2 * Math.PI * 2 * t)) * t) * 0.005;
+          data[i] = (lp * mod + hp * 0.3 + bubble) * 0.1;
+        }
+        break;
+      }
+      case 'white-noise': {
+        for (let i = 0; i < length; i++) {
+          data[i] = (rng() * 2 - 1) * 0.06;
+        }
+        break;
+      }
+      case 'brown-noise': {
+        // Integrated white noise (random walk), low-frequency heavy
+        let val = 0;
+        for (let i = 0; i < length; i++) {
+          val += (rng() * 2 - 1) * 0.02;
+          val *= 0.998; // slight decay to prevent drift
+          data[i] = val * 0.15;
+        }
+        break;
+      }
+      case 'night-crickets': {
+        // Pulsing high-freq tone + gentle wind
+        let lp = 0;
+        for (let i = 0; i < length; i++) {
+          const t = i / sampleRate;
+          const raw = rng() * 2 - 1;
+          lp += 0.001 * (raw - lp);
+          let sample = lp * 0.04; // wind base
+          // Cricket pulse
+          const pulse = Math.sin(2 * Math.PI * 14 * t);
+          if (pulse > 0.2) {
+            sample += Math.sin(2 * Math.PI * 4800 * t) * (pulse - 0.2) * 0.015;
+          }
+          // Second cricket slightly offset
+          const pulse2 = Math.sin(2 * Math.PI * 11 * t + 2);
+          if (pulse2 > 0.3) {
+            sample += Math.sin(2 * Math.PI * 5200 * t) * (pulse2 - 0.3) * 0.01;
+          }
+          data[i] = sample;
+        }
+        break;
+      }
+      case 'calm-fan': {
+        // Smooth, very-low-pass noise (humming)
+        let lp = 0;
+        for (let i = 0; i < length; i++) {
+          const t = i / sampleRate;
+          const raw = rng() * 2 - 1;
+          lp += 0.0008 * (raw - lp);
+          // Add slight motor hum
+          const hum = Math.sin(2 * Math.PI * 120 * t) * 0.003;
+          data[i] = (lp + hum) * 0.12;
+        }
+        break;
+      }
+      case 'rain-window': {
+        // Muffled rain (lower cutoff) + occasional louder drops
+        let lp = 0;
+        const dropRng = createRng(150 + ch);
+        for (let i = 0; i < length; i++) {
+          const t = i / sampleRate;
+          const raw = rng() * 2 - 1;
+          lp += 0.005 * (raw - lp);
+          let sample = lp * 0.1;
+          // Random drop impacts
+          if (dropRng() < 0.00015) {
+            const dropLen = Math.floor(sampleRate * (0.005 + dropRng() * 0.015));
+            for (let j = 0; j < dropLen && (i + j) < length; j++) {
+              const env = 1 - j / dropLen;
+              const freq = 1200 + dropRng() * 800;
+              data[i + j] = (data[i + j] || 0) + Math.sin(2 * Math.PI * freq * (j / sampleRate)) * env * 0.03;
+            }
+          }
+          data[i] += sample;
         }
         break;
       }
@@ -128,12 +283,8 @@ export const generateBackgroundMusic = async (
   source.buffer = buffer;
   source.connect(offlineContext.destination);
   source.start();
-
   const renderedBuffer = await offlineContext.startRendering();
-  
-  // Convert to WAV
-  const wavBlob = bufferToWave(renderedBuffer, renderedBuffer.length);
-  return wavBlob;
+  return bufferToWave(renderedBuffer, renderedBuffer.length);
 };
 
 // Mix two audio files together
@@ -146,22 +297,16 @@ export const mixAudioFiles = async (
   if (!backgroundBlob) return voiceBlob;
 
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-
-  // Decode both audio files
   const [voiceBuffer, bgBuffer] = await Promise.all([
     audioContext.decodeAudioData(await voiceBlob.arrayBuffer()),
     audioContext.decodeAudioData(await backgroundBlob.arrayBuffer()),
   ]);
 
-  // Use the voice duration
   const duration = voiceBuffer.duration;
   const sampleRate = voiceBuffer.sampleRate;
-  const length = Math.floor(sampleRate * duration);
+  const len = Math.floor(sampleRate * duration);
+  const offlineContext = new OfflineAudioContext(2, len, sampleRate);
 
-  // Create offline context for mixing
-  const offlineContext = new OfflineAudioContext(2, length, sampleRate);
-
-  // Voice source
   const voiceSource = offlineContext.createBufferSource();
   voiceSource.buffer = voiceBuffer;
   const voiceGain = offlineContext.createGain();
@@ -169,7 +314,6 @@ export const mixAudioFiles = async (
   voiceSource.connect(voiceGain);
   voiceGain.connect(offlineContext.destination);
 
-  // Background source (loop if shorter)
   const bgSource = offlineContext.createBufferSource();
   bgSource.buffer = bgBuffer;
   bgSource.loop = true;
@@ -178,16 +322,11 @@ export const mixAudioFiles = async (
   bgSource.connect(bgGain);
   bgGain.connect(offlineContext.destination);
 
-  // Start both
   voiceSource.start(0);
   bgSource.start(0);
 
-  // Render
   const mixedBuffer = await offlineContext.startRendering();
-
-  // Convert to blob
-  const wavBlob = bufferToWave(mixedBuffer, mixedBuffer.length);
-  return wavBlob;
+  return bufferToWave(mixedBuffer, mixedBuffer.length);
 };
 
 // Convert AudioBuffer to WAV Blob
@@ -200,22 +339,20 @@ function bufferToWave(abuffer: AudioBuffer, len: number): Blob {
   let offset = 0;
   let pos = 0;
 
-  // Write WAV header
-  setUint32(0x46464952); // "RIFF"
-  setUint32(length - 8); // file length - 8
-  setUint32(0x45564157); // "WAVE"
-  setUint32(0x20746d66); // "fmt " chunk
-  setUint32(16); // length = 16
-  setUint16(1); // PCM (uncompressed)
+  setUint32(0x46464952);
+  setUint32(length - 8);
+  setUint32(0x45564157);
+  setUint32(0x20746d66);
+  setUint32(16);
+  setUint16(1);
   setUint16(numOfChan);
   setUint32(abuffer.sampleRate);
-  setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
-  setUint16(numOfChan * 2); // block-align
-  setUint16(16); // 16-bit
-  setUint32(0x61746164); // "data" - chunk
-  setUint32(length - pos - 4); // chunk length
+  setUint32(abuffer.sampleRate * 2 * numOfChan);
+  setUint16(numOfChan * 2);
+  setUint16(16);
+  setUint32(0x61746164);
+  setUint32(length - pos - 4);
 
-  // Write interleaved data
   for (let i = 0; i < abuffer.numberOfChannels; i++) {
     channels.push(abuffer.getChannelData(i));
   }
@@ -236,7 +373,6 @@ function bufferToWave(abuffer: AudioBuffer, len: number): Blob {
     view.setUint16(pos, data, true);
     pos += 2;
   }
-
   function setUint32(data: number) {
     view.setUint32(pos, data, true);
     pos += 4;

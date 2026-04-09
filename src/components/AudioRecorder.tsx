@@ -6,7 +6,7 @@ import { Mic, Square, Upload, Music, Tag, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-import { generateBackgroundMusic, mixAudioFiles } from "@/lib/backgroundMusic";
+import { generateBackgroundMusic, mixAudioFiles, BackgroundSoundType, SOUND_LABELS } from "@/lib/backgroundMusic";
 
 interface AudioRecorderProps {
   userId: string;
