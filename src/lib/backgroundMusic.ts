@@ -57,14 +57,13 @@ export const generateBackgroundMusic = async (
 
     switch (type) {
       case 'soft-rain': {
-        // Filtered white noise with gentle amplitude modulation
         let lp = 0;
         for (let i = 0; i < length; i++) {
           const t = i / sampleRate;
           const raw = rng() * 2 - 1;
-          lp += 0.01 * (raw - lp); // low-pass
+          lp += 0.02 * (raw - lp);
           const mod = 0.7 + 0.3 * Math.sin(2 * Math.PI * 0.15 * t);
-          data[i] = lp * mod * 0.12;
+          data[i] = lp * mod * 0.55;
         }
         break;
       }
