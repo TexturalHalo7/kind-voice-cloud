@@ -4,31 +4,21 @@ export type BackgroundSoundType =
   | 'none'
   | 'soft-rain'
   | 'ocean-waves'
-  | 'wind-trees'
-  | 'fireplace'
   | 'forest-birds'
   | 'thunder-rain'
-  | 'soft-stream'
   | 'white-noise'
   | 'brown-noise'
-  | 'night-crickets'
-  | 'calm-fan'
-  | 'rain-window';
+  | 'night-crickets';
 
 export const SOUND_LABELS: Record<BackgroundSoundType, string> = {
   'none': 'None',
   'soft-rain': 'Soft Rain',
   'ocean-waves': 'Gentle Ocean Waves',
-  'wind-trees': 'Wind Through Trees',
-  'fireplace': 'Fireplace Crackling',
   'forest-birds': 'Forest / Birds Chirping',
   'thunder-rain': 'Distant Thunder with Rain',
-  'soft-stream': 'Soft Stream / Flowing Water',
   'white-noise': 'White Noise',
   'brown-noise': 'Brown Noise',
   'night-crickets': 'Night Ambience / Crickets',
-  'calm-fan': 'Calm Fan / Room Ambience',
-  'rain-window': 'Rain on Window',
 };
 
 // Deterministic pseudo-random number generator
@@ -189,7 +179,7 @@ export const generateBackgroundMusic = async (
       }
       case 'white-noise': {
         for (let i = 0; i < length; i++) {
-          data[i] = (rng() * 2 - 1) * 0.25;
+          data[i] = (rng() * 2 - 1) * 0.15;
         }
         break;
       }
@@ -198,7 +188,7 @@ export const generateBackgroundMusic = async (
         for (let i = 0; i < length; i++) {
           val += (rng() * 2 - 1) * 0.02;
           val *= 0.998;
-          data[i] = val * 0.6;
+          data[i] = val * 0.35;
         }
         break;
       }
@@ -218,37 +208,6 @@ export const generateBackgroundMusic = async (
             sample += Math.sin(2 * Math.PI * 5200 * t) * (pulse2 - 0.3) * 0.04;
           }
           data[i] = sample;
-        }
-        break;
-      }
-      case 'calm-fan': {
-        let lp = 0;
-        for (let i = 0; i < length; i++) {
-          const t = i / sampleRate;
-          const raw = rng() * 2 - 1;
-          lp += 0.002 * (raw - lp);
-          const hum = Math.sin(2 * Math.PI * 120 * t) * 0.015;
-          data[i] = (lp + hum) * 0.5;
-        }
-        break;
-      }
-      case 'rain-window': {
-        let lp = 0;
-        const dropRng = createRng(150 + ch);
-        for (let i = 0; i < length; i++) {
-          const t = i / sampleRate;
-          const raw = rng() * 2 - 1;
-          lp += 0.01 * (raw - lp);
-          let sample = lp * 0.45;
-          if (dropRng() < 0.0003) {
-            const dropLen = Math.floor(sampleRate * (0.005 + dropRng() * 0.015));
-            for (let j = 0; j < dropLen && (i + j) < length; j++) {
-              const env = 1 - j / dropLen;
-              const freq = 1200 + dropRng() * 800;
-              data[i + j] = (data[i + j] || 0) + Math.sin(2 * Math.PI * freq * (j / sampleRate)) * env * 0.12;
-            }
-          }
-          data[i] += sample;
         }
         break;
       }
