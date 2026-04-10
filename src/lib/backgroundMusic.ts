@@ -252,6 +252,7 @@ export const generateBackgroundMusic = async (
         }
         break;
       }
+    }
   }
 
   // Render buffer to blob
