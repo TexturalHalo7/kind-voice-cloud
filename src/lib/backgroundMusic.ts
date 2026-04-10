@@ -6,7 +6,6 @@ export type BackgroundSoundType =
   | 'ocean-waves'
   | 'forest-birds'
   | 'thunder-rain'
-  | 'white-noise'
   | 'brown-noise'
   | 'night-crickets';
 
@@ -16,7 +15,7 @@ export const SOUND_LABELS: Record<BackgroundSoundType, string> = {
   'ocean-waves': 'Gentle Ocean Waves',
   'forest-birds': 'Forest / Birds Chirping',
   'thunder-rain': 'Distant Thunder with Rain',
-  'white-noise': 'White Noise',
+  
   'brown-noise': 'Brown Noise',
   'night-crickets': 'Night Ambience / Crickets',
 };
@@ -124,12 +123,6 @@ export const generateBackgroundMusic = async (
             }
           }
           data[i] = sample;
-        }
-        break;
-      }
-      case 'white-noise': {
-        for (let i = 0; i < length; i++) {
-          data[i] = (rng() * 2 - 1) * 0.15;
         }
         break;
       }
