@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Heart, Sparkles, Check, X } from "lucide-react";
+import { Heart, Sparkles, Check, X, HelpCircle } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -15,12 +16,22 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [resetUsername, setResetUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
 
   // Password validation
   const hasMinLength = password.length >= 8;
   const hasNumber = /\d/.test(password);
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~;']/.test(password);
   const isPasswordValid = hasMinLength && hasNumber && hasSpecialChar;
+
+  // Reset password validation
+  const resetHasMinLength = newPassword.length >= 8;
+  const resetHasNumber = /\d/.test(newPassword);
+  const resetHasSpecialChar = /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~;']/.test(newPassword);
+  const isResetPasswordValid = resetHasMinLength && resetHasNumber && resetHasSpecialChar;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -33,7 +44,6 @@ const Auth = () => {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate password on signup
     if (!isLogin && !isPasswordValid) {
       toast.error("Please meet all password requirements");
       return;
@@ -74,6 +84,33 @@ const Auth = () => {
       toast.error(error.message || "An error occurred");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isResetPasswordValid) {
+      toast.error("Please meet all password requirements");
+      return;
+    }
+    setResetLoading(true);
+    try {
+      const email = `${resetUsername.toLowerCase().trim()}@voicesofkindness.app`;
+      // First sign in to verify the account exists, then update password
+      // Since we can't reset without email, we'll use admin-level or inform user
+      // For now, send a reset email to the synthetic address
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("If that username exists, a password reset has been initiated. Please try creating a new account if you can't recover yours.");
+      setForgotOpen(false);
+      setResetUsername("");
+      setNewPassword("");
+    } catch (error: any) {
+      toast.error("Unable to reset password. You may need to create a new account.");
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -157,7 +194,17 @@ const Auth = () => {
                 {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
               </Button>
 
-              <div className="text-center pt-2">
+              <div className="flex flex-col items-center gap-2 pt-2">
+                {isLogin && (
+                  <button
+                    type="button"
+                    onClick={() => setForgotOpen(true)}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                  >
+                    <HelpCircle className="w-3.5 h-3.5" />
+                    Forgot your password?
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsLogin(!isLogin)}
@@ -172,6 +219,44 @@ const Auth = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-primary" />
+              Forgot Your Password?
+            </DialogTitle>
+            <DialogDescription>
+              Since Voices of Kindness uses usernames instead of email, password recovery is limited. 
+              If you can't remember your password, we recommend creating a new account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              💡 <strong>Tip:</strong> Next time, write your password down somewhere safe so you don't forget it!
+            </p>
+            <div className="flex flex-col gap-2">
+              <Button
+                onClick={() => {
+                  setForgotOpen(false);
+                  setIsLogin(false);
+                }}
+                className="w-full bg-gradient-warm hover:opacity-90 rounded-xl"
+              >
+                Create a New Account
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setForgotOpen(false)}
+                className="w-full rounded-xl"
+              >
+                Try Again
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
