@@ -69,40 +69,6 @@ export const generateBackgroundMusic = async (
         }
         break;
       }
-      case 'wind-trees': {
-        let lp = 0;
-        let lp2 = 0;
-        for (let i = 0; i < length; i++) {
-          const t = i / sampleRate;
-          const raw = rng() * 2 - 1;
-          lp += 0.004 * (raw - lp);
-          lp2 += 0.015 * (raw - lp2);
-          const mod = 0.5 + 0.5 * Math.sin(2 * Math.PI * 0.07 * t);
-          const gust = Math.max(0, Math.sin(2 * Math.PI * 0.03 * t + ch)) * 0.4;
-          data[i] = (lp * mod + lp2 * gust) * 0.45;
-        }
-        break;
-      }
-      case 'fireplace': {
-        let lp = 0;
-        const pops = createRng(101 + ch);
-        for (let i = 0; i < length; i++) {
-          const t = i / sampleRate;
-          const raw = rng() * 2 - 1;
-          lp += 0.002 * (raw - lp);
-          let sample = lp * 0.35;
-          if (pops() < 0.0008) {
-            const popLen = Math.floor(sampleRate * (0.002 + pops() * 0.01));
-            for (let j = 0; j < popLen && (i + j) < length; j++) {
-              const env = 1 - j / popLen;
-              data[i + j] = (data[i + j] || 0) + (rng() * 2 - 1) * env * 0.35;
-            }
-          }
-          sample += Math.sin(2 * Math.PI * 60 * t) * 0.04;
-          data[i] += sample;
-        }
-        break;
-      }
       case 'forest-birds': {
         let lp = 0;
         const chirpRng = createRng(77 + ch);
@@ -158,22 +124,6 @@ export const generateBackgroundMusic = async (
             }
           }
           data[i] = sample;
-        }
-        break;
-      }
-      case 'soft-stream': {
-        let lp = 0;
-        let hp = 0;
-        let prev = 0;
-        for (let i = 0; i < length; i++) {
-          const t = i / sampleRate;
-          const raw = rng() * 2 - 1;
-          lp += 0.012 * (raw - lp);
-          hp = 0.95 * (hp + lp - prev);
-          prev = lp;
-          const mod = 0.6 + 0.4 * Math.sin(2 * Math.PI * 0.3 * t);
-          const bubble = Math.sin(2 * Math.PI * (800 + 200 * Math.sin(2 * Math.PI * 2 * t)) * t) * 0.02;
-          data[i] = (lp * mod + hp * 0.3 + bubble) * 0.45;
         }
         break;
       }
