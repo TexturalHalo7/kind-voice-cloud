@@ -15,10 +15,10 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(searchParams.get("mode") !== "signup");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [resetUsername, setResetUsername] = useState("");
-  const [newPassword, setNewPassword] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
 
   // Password validation
@@ -26,12 +26,6 @@ const Auth = () => {
   const hasNumber = /\d/.test(password);
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~;']/.test(password);
   const isPasswordValid = hasMinLength && hasNumber && hasSpecialChar;
-
-  // Reset password validation
-  const resetHasMinLength = newPassword.length >= 8;
-  const resetHasNumber = /\d/.test(newPassword);
-  const resetHasSpecialChar = /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~;']/.test(newPassword);
-  const isResetPasswordValid = resetHasMinLength && resetHasNumber && resetHasSpecialChar;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -52,10 +46,19 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const email = `${username.toLowerCase().trim()}@voicesofkindness.app`;
       if (isLogin) {
+        // Look up the real email by username
+        const { data: authEmail, error: lookupError } = await supabase.rpc(
+          "get_email_by_username",
+          { lookup_username: username.trim() }
+        );
+
+        if (lookupError || !authEmail) {
+          throw new Error("Username not found. Please check and try again.");
+        }
+
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: authEmail,
           password,
         });
 
@@ -64,12 +67,18 @@ const Auth = () => {
         toast.success("Welcome back!");
         navigate("/dashboard");
       } else {
+        if (!email.trim()) {
+          toast.error("Please enter your email address");
+          setLoading(false);
+          return;
+        }
+
         const { error } = await supabase.auth.signUp({
-          email,
+          email: email.trim().toLowerCase(),
           password,
           options: {
             data: {
-              username: username,
+              username: username.trim(),
             },
             emailRedirectTo: `${window.location.origin}/dashboard`,
           },
@@ -87,28 +96,47 @@ const Auth = () => {
     }
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isResetPasswordValid) {
-      toast.error("Please meet all password requirements");
+    if (!resetUsername.trim()) {
+      toast.error("Please enter your username");
       return;
     }
     setResetLoading(true);
     try {
-      const email = `${resetUsername.toLowerCase().trim()}@voicesofkindness.app`;
-      // First sign in to verify the account exists, then update password
-      // Since we can't reset without email, we'll use admin-level or inform user
-      // For now, send a reset email to the synthetic address
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      // Look up the real email by username
+      const { data: authEmail, error: lookupError } = await supabase.rpc(
+        "get_email_by_username",
+        { lookup_username: resetUsername.trim() }
+      );
+
+      if (lookupError || !authEmail) {
+        // Don't reveal if username exists
+        toast.success("If that username exists and has an email on file, you'll receive a password reset link.");
+        setForgotOpen(false);
+        setResetUsername("");
+        setResetLoading(false);
+        return;
+      }
+
+      // Check if it's a synthetic email (old accounts without real email)
+      if (authEmail.endsWith("@voicesofkindness.app")) {
+        toast.error("This account was created before email recovery was available. Please create a new account.");
+        setResetLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(authEmail, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
+
       if (error) throw error;
-      toast.success("If that username exists, a password reset has been initiated. Please try creating a new account if you can't recover yours.");
+
+      toast.success("If that username exists and has an email on file, you'll receive a password reset link.");
       setForgotOpen(false);
       setResetUsername("");
-      setNewPassword("");
     } catch (error: any) {
-      toast.error("Unable to reset password. You may need to create a new account.");
+      toast.error("Unable to send reset email. Please try again later.");
     } finally {
       setResetLoading(false);
     }
@@ -165,6 +193,24 @@ const Auth = () => {
                   className="rounded-xl"
                 />
               </div>
+
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="rounded-xl"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Used for password recovery only — never shared publicly
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -225,36 +271,46 @@ const Auth = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <HelpCircle className="w-5 h-5 text-primary" />
-              Forgot Your Password?
+              Reset Your Password
             </DialogTitle>
             <DialogDescription>
-              Since Voices of Kindness uses usernames instead of email, password recovery is limited. 
-              If you can't remember your password, we recommend creating a new account.
+              Enter your username and we'll send a password reset link to the email on your account.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <p className="text-sm text-muted-foreground">
-              💡 <strong>Tip:</strong> Next time, write your password down somewhere safe so you don't forget it!
-            </p>
+          <form onSubmit={handleForgotPassword} className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="reset-username">Username</Label>
+              <Input
+                id="reset-username"
+                type="text"
+                placeholder="Your username"
+                value={resetUsername}
+                onChange={(e) => setResetUsername(e.target.value)}
+                required
+                className="rounded-xl"
+              />
+            </div>
             <div className="flex flex-col gap-2">
               <Button
-                onClick={() => {
-                  setForgotOpen(false);
-                  setIsLogin(false);
-                }}
+                type="submit"
+                disabled={resetLoading}
                 className="w-full bg-gradient-warm hover:opacity-90 rounded-xl"
               >
-                Create a New Account
+                {resetLoading ? "Sending..." : "Send Reset Link"}
               </Button>
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => setForgotOpen(false)}
                 className="w-full rounded-xl"
               >
-                Try Again
+                Cancel
               </Button>
             </div>
-          </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Accounts created before email was required may not be recoverable.
+            </p>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
