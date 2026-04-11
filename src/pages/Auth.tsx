@@ -18,7 +18,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
-  const [resetUsername, setResetUsername] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
 
   // Password validation
@@ -98,43 +98,21 @@ const Auth = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!resetUsername.trim()) {
-      toast.error("Please enter your username");
+    if (!resetEmail.trim()) {
+      toast.error("Please enter your email address");
       return;
     }
     setResetLoading(true);
     try {
-      // Look up the real email by username
-      const { data: authEmail, error: lookupError } = await supabase.rpc(
-        "get_email_by_username",
-        { lookup_username: resetUsername.trim() }
-      );
-
-      if (lookupError || !authEmail) {
-        // Don't reveal if username exists
-        toast.success("If that username exists and has an email on file, you'll receive a password reset link.");
-        setForgotOpen(false);
-        setResetUsername("");
-        setResetLoading(false);
-        return;
-      }
-
-      // Check if it's a synthetic email (old accounts without real email)
-      if (authEmail.endsWith("@voicesofkindness.app")) {
-        toast.error("This account was created before email recovery was available. Please create a new account.");
-        setResetLoading(false);
-        return;
-      }
-
-      const { error } = await supabase.auth.resetPasswordForEmail(authEmail, {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim().toLowerCase(), {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (error) throw error;
 
-      toast.success("If that username exists and has an email on file, you'll receive a password reset link.");
+      toast.success("If an account exists with that email, you'll receive a password reset link.");
       setForgotOpen(false);
-      setResetUsername("");
+      setResetEmail("");
     } catch (error: any) {
       toast.error("Unable to send reset email. Please try again later.");
     } finally {
@@ -274,18 +252,18 @@ const Auth = () => {
               Reset Your Password
             </DialogTitle>
             <DialogDescription>
-              Enter your username and we'll send a password reset link to the email on your account.
+              Enter your email address and we'll send you a password reset link.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleForgotPassword} className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label htmlFor="reset-username">Username</Label>
+              <Label htmlFor="reset-email">Email</Label>
               <Input
-                id="reset-username"
-                type="text"
-                placeholder="Your username"
-                value={resetUsername}
-                onChange={(e) => setResetUsername(e.target.value)}
+                id="reset-email"
+                type="email"
+                placeholder="your@email.com"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
                 required
                 className="rounded-xl"
               />
@@ -307,9 +285,6 @@ const Auth = () => {
                 Cancel
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground text-center">
-              Accounts created before email was required may not be recoverable.
-            </p>
           </form>
         </DialogContent>
       </Dialog>
