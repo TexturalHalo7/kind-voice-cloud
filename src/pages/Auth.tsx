@@ -20,6 +20,7 @@ const Auth = () => {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Password validation
   const hasMinLength = password.length >= 8;
