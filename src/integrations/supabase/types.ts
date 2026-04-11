@@ -192,6 +192,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          email: string | null
           id: string
           last_message_date: string | null
           message_count: number
@@ -204,6 +205,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email?: string | null
           id?: string
           last_message_date?: string | null
           message_count?: number
@@ -216,6 +218,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email?: string | null
           id?: string
           last_message_date?: string | null
           message_count?: number
@@ -304,6 +307,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_email_by_username: {
+        Args: { lookup_username: string }
+        Returns: string
+      }
       get_leaderboard_profiles: {
         Args: never
         Returns: {
