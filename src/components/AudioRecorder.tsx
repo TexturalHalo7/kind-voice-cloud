@@ -287,6 +287,54 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
                   ))}
                 </SelectContent>
               </Select>
+              {backgroundMusic === 'custom' && (
+                <div className="mt-2 space-y-2">
+                  <input
+                    ref={customFileRef}
+                    type="file"
+                    accept="audio/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 20 * 1024 * 1024) {
+                        toast.error("File too large. Max 20MB.");
+                        return;
+                      }
+                      setCustomSoundBlob(file);
+                      setCustomSoundName(file.name);
+                      toast.success(`"${file.name}" loaded as background sound`);
+                    }}
+                  />
+                  {customSoundName ? (
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
+                      <FileAudio className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span className="text-sm truncate flex-1">{customSoundName}</span>
+                      <button
+                        onClick={() => {
+                          setCustomSoundBlob(null);
+                          setCustomSoundName("");
+                          if (customFileRef.current) customFileRef.current.value = "";
+                        }}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => customFileRef.current?.click()}
+                    >
+                      <FileAudio className="w-4 h-4 mr-2" />
+                      Choose Audio File
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </>
         )}
