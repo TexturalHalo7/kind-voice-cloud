@@ -95,8 +95,14 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
         return;
       }
 
-      const selectedIndex = Math.floor(Math.random() * messages.length);
-      const selectedMessage = messages[selectedIndex];
+      // Filter out messages from the same person as the current message
+      const filteredMessages = messageOwnerId
+        ? messages.filter((m) => m.user_id !== messageOwnerId)
+        : messages;
+
+      const pool = filteredMessages.length > 0 ? filteredMessages : messages;
+      const selectedIndex = Math.floor(Math.random() * pool.length);
+      const selectedMessage = pool[selectedIndex];
 
       setAudioUrl(selectedMessage.audio_url);
       setUsername(selectedMessage.username || "Anonymous");
