@@ -134,7 +134,18 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         }
 
         // Mix with background music immediately for preview
-        if (backgroundMusic !== 'none') {
+        if (backgroundMusic === 'custom' && customSoundBlob) {
+          setMixingAudio(true);
+          try {
+            const mixed = await mixAudioFiles(audioBlob, customSoundBlob, 1.0, 0.25);
+            setPreviewBlob(mixed);
+          } catch (error) {
+            toast.error("Failed to mix with your custom sound");
+            setPreviewBlob(audioBlob);
+          } finally {
+            setMixingAudio(false);
+          }
+        } else if (backgroundMusic !== 'none' && backgroundMusic !== 'custom') {
           setMixingAudio(true);
           try {
             const recordingDuration = (Date.now() - recordingStartTime) / 1000;
