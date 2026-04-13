@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mic, Square, Upload, Music, Tag } from "lucide-react";
+import { Mic, Square, Upload, Music, Tag, FileAudio, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
@@ -25,6 +25,9 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [mixingAudio, setMixingAudio] = useState(false);
+  const [customSoundBlob, setCustomSoundBlob] = useState<Blob | null>(null);
+  const [customSoundName, setCustomSoundName] = useState<string>("");
+  const customFileRef = useRef<HTMLInputElement | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
