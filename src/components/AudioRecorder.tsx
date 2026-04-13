@@ -183,7 +183,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      if (backgroundMusic !== 'none') {
+      if (backgroundMusic === 'custom' || backgroundMusic !== 'none') {
         toast.info("Processing audio with background music...");
       } else {
         toast.success("Recording complete! Ready to share your message.");
