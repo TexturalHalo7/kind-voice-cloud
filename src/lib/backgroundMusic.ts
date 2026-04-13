@@ -2,7 +2,6 @@
 
 export type BackgroundSoundType =
   | 'none'
-  | 'custom'
   | 'soft-rain'
   | 'ocean-waves'
   | 'forest-birds'
@@ -11,7 +10,6 @@ export type BackgroundSoundType =
   | 'night-crickets';
 
 export const SOUND_LABELS: Record<BackgroundSoundType, string> = {
-  'custom': 'My Own Sound',
   'none': 'None',
   'soft-rain': 'Soft Rain',
   'ocean-waves': 'Gentle Ocean Waves',
