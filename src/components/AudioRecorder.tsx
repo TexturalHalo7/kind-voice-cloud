@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mic, Square, Upload, Music, Tag } from "lucide-react";
+import { Mic, Square, Upload, Music, Tag, FileAudio, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
@@ -25,6 +25,9 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [mixingAudio, setMixingAudio] = useState(false);
+  const [customSoundBlob, setCustomSoundBlob] = useState<Blob | null>(null);
+  const [customSoundName, setCustomSoundName] = useState<string>("");
+  const customFileRef = useRef<HTMLInputElement | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -131,7 +134,18 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         }
 
         // Mix with background music immediately for preview
-        if (backgroundMusic !== 'none') {
+        if (backgroundMusic === 'custom' && customSoundBlob) {
+          setMixingAudio(true);
+          try {
+            const mixed = await mixAudioFiles(audioBlob, customSoundBlob, 1.0, 0.25);
+            setPreviewBlob(mixed);
+          } catch (error) {
+            toast.error("Failed to mix with your custom sound");
+            setPreviewBlob(audioBlob);
+          } finally {
+            setMixingAudio(false);
+          }
+        } else if (backgroundMusic !== 'none' && backgroundMusic !== 'custom') {
           setMixingAudio(true);
           try {
             const recordingDuration = (Date.now() - recordingStartTime) / 1000;
@@ -169,7 +183,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      if (backgroundMusic !== 'none') {
+      if (backgroundMusic === 'custom' || backgroundMusic !== 'none') {
         toast.info("Processing audio with background music...");
       } else {
         toast.success("Recording complete! Ready to share your message.");
@@ -273,6 +287,54 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
                   ))}
                 </SelectContent>
               </Select>
+              {backgroundMusic === 'custom' && (
+                <div className="mt-2 space-y-2">
+                  <input
+                    ref={customFileRef}
+                    type="file"
+                    accept="audio/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 20 * 1024 * 1024) {
+                        toast.error("File too large. Max 20MB.");
+                        return;
+                      }
+                      setCustomSoundBlob(file);
+                      setCustomSoundName(file.name);
+                      toast.success(`"${file.name}" loaded as background sound`);
+                    }}
+                  />
+                  {customSoundName ? (
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
+                      <FileAudio className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span className="text-sm truncate flex-1">{customSoundName}</span>
+                      <button
+                        onClick={() => {
+                          setCustomSoundBlob(null);
+                          setCustomSoundName("");
+                          if (customFileRef.current) customFileRef.current.value = "";
+                        }}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => customFileRef.current?.click()}
+                    >
+                      <FileAudio className="w-4 h-4 mr-2" />
+                      Choose Audio File
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </>
         )}
