@@ -69,6 +69,13 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
   };
 
   const fetchMessage = async () => {
+    // Stop and clear current audio before loading a new message
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.removeAttribute("src");
+      audioRef.current.load();
+    }
+    setAudioUrl(null);
     setLoading(true);
     setHasThanked(false);
     setIsFavorited(false);
