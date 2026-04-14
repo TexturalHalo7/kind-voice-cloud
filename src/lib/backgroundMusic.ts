@@ -39,6 +39,7 @@ export const generateBackgroundMusic = async (
   const realAudioFiles: Partial<Record<BackgroundSoundType, string>> = {
     'ocean-waves': '/audio/ocean-waves.mp3',
     'soft-rain': '/audio/soft-rain.mp3',
+    'forest-birds': '/audio/forest-birds.mp3',
   };
 
   if (realAudioFiles[type]) {
@@ -92,35 +93,7 @@ export const generateBackgroundMusic = async (
         break;
       }
       case 'forest-birds': {
-        let lp = 0;
-        const chirpRng = createRng(77 + ch);
-        const chirps: { time: number; freq: number; dur: number }[] = [];
-        let ct = 1 + chirpRng() * 2;
-        while (ct < durationSeconds) {
-          const notes = 2 + Math.floor(chirpRng() * 4);
-          for (let n = 0; n < notes; n++) {
-            chirps.push({
-              time: ct + n * 0.08,
-              freq: 2000 + chirpRng() * 2500,
-              dur: 0.03 + chirpRng() * 0.06,
-            });
-          }
-          ct += 2 + chirpRng() * 5;
-        }
-        for (let i = 0; i < length; i++) {
-          const t = i / sampleRate;
-          const raw = rng() * 2 - 1;
-          lp += 0.004 * (raw - lp);
-          let sample = lp * 0.2;
-          for (const c of chirps) {
-            if (t >= c.time && t <= c.time + c.dur) {
-              const dt = t - c.time;
-              const env = Math.sin((dt / c.dur) * Math.PI);
-              sample += Math.sin(2 * Math.PI * (c.freq + dt * 6000) * dt) * env * 0.08;
-            }
-          }
-          data[i] = sample;
-        }
+        // Handled by real audio file above
         break;
       }
       case 'thunder-rain': {
