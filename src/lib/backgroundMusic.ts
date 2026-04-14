@@ -35,16 +35,20 @@ export const generateBackgroundMusic = async (
 ): Promise<Blob | null> => {
   if (type === 'none') return null;
 
-  // For ocean waves, use the real audio file
-  if (type === 'ocean-waves') {
+  // For sounds with real audio files, load and loop them
+  const realAudioFiles: Partial<Record<BackgroundSoundType, string>> = {
+    'ocean-waves': '/audio/ocean-waves.mp3',
+    'soft-rain': '/audio/soft-rain.mp3',
+  };
+
+  if (realAudioFiles[type]) {
     try {
-      const response = await fetch('/audio/ocean-waves.mp3');
-      if (!response.ok) throw new Error('Failed to load ocean waves audio');
+      const response = await fetch(realAudioFiles[type]!);
+      if (!response.ok) throw new Error(`Failed to load ${type} audio`);
       const arrayBuffer = await response.arrayBuffer();
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const decoded = await audioContext.decodeAudioData(arrayBuffer);
       
-      // Trim or loop to match the requested duration
       const sampleRate = decoded.sampleRate;
       const targetLength = Math.floor(sampleRate * durationSeconds);
       const offlineCtx = new OfflineAudioContext(2, targetLength, sampleRate);
@@ -57,8 +61,7 @@ export const generateBackgroundMusic = async (
       await audioContext.close();
       return bufferToWave(rendered, rendered.length);
     } catch (e) {
-      console.error('Failed to load ocean waves file, falling back to synthesis', e);
-      // Fall through to synthesized version below won't happen, so synthesize inline
+      console.error(`Failed to load ${type} file, falling back to synthesis`, e);
     }
   }
 
