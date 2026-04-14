@@ -35,6 +35,34 @@ export const generateBackgroundMusic = async (
 ): Promise<Blob | null> => {
   if (type === 'none') return null;
 
+  // For ocean waves, use the real audio file
+  if (type === 'ocean-waves') {
+    try {
+      const response = await fetch('/audio/ocean-waves.mp3');
+      if (!response.ok) throw new Error('Failed to load ocean waves audio');
+      const arrayBuffer = await response.arrayBuffer();
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const decoded = await audioContext.decodeAudioData(arrayBuffer);
+      
+      // Trim or loop to match the requested duration
+      const sampleRate = decoded.sampleRate;
+      const targetLength = Math.floor(sampleRate * durationSeconds);
+      const offlineCtx = new OfflineAudioContext(2, targetLength, sampleRate);
+      const source = offlineCtx.createBufferSource();
+      source.buffer = decoded;
+      source.loop = true;
+      source.connect(offlineCtx.destination);
+      source.start(0);
+      const rendered = await offlineCtx.startRendering();
+      await audioContext.close();
+      return bufferToWave(rendered, rendered.length);
+    } catch (e) {
+      console.error('Failed to load ocean waves file, falling back to synthesis', e);
+      // Fall through to synthesized version below won't happen, so synthesize inline
+    }
+  }
+
+
   const sampleRate = 44100;
   const length = Math.floor(sampleRate * durationSeconds);
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate });
@@ -57,15 +85,7 @@ export const generateBackgroundMusic = async (
         break;
       }
       case 'ocean-waves': {
-        let lp = 0;
-        for (let i = 0; i < length; i++) {
-          const t = i / sampleRate;
-          const raw = rng() * 2 - 1;
-          lp += 0.008 * (raw - lp);
-          const wave = Math.pow(Math.max(0, Math.sin(2 * Math.PI * (1 / 8) * t)), 2);
-          const secondWave = Math.pow(Math.max(0, Math.sin(2 * Math.PI * (1 / 13) * t + 1)), 2) * 0.6;
-          data[i] = lp * (wave + secondWave) * 0.6;
-        }
+        // Will be handled by loading the real audio file below
         break;
       }
       case 'forest-birds': {
