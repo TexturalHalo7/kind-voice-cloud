@@ -98,29 +98,7 @@ export const generateBackgroundMusic = async (
         break;
       }
       case 'thunder-rain': {
-        let lp = 0;
-        const thunderRng = createRng(200 + ch);
-        const thunders: { time: number; dur: number }[] = [];
-        let tt = 4 + thunderRng() * 6;
-        while (tt < durationSeconds) {
-          thunders.push({ time: tt, dur: 2 + thunderRng() * 3 });
-          tt += 8 + thunderRng() * 12;
-        }
-        for (let i = 0; i < length; i++) {
-          const t = i / sampleRate;
-          const raw = rng() * 2 - 1;
-          lp += 0.02 * (raw - lp);
-          let sample = lp * 0.45;
-          for (const th of thunders) {
-            if (t >= th.time && t <= th.time + th.dur) {
-              const dt = t - th.time;
-              const env = Math.sin((dt / th.dur) * Math.PI) * Math.exp(-dt * 0.5);
-              sample += Math.sin(2 * Math.PI * (40 + dt * 10) * dt) * env * 0.25;
-              sample += (rng() * 2 - 1) * env * 0.12;
-            }
-          }
-          data[i] = sample;
-        }
+        // Handled by real audio file above
         break;
       }
       case 'brown-noise': {
