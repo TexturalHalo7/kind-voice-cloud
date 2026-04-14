@@ -39,6 +39,7 @@ export const generateBackgroundMusic = async (
   const realAudioFiles: Partial<Record<BackgroundSoundType, string>> = {
     'ocean-waves': '/audio/ocean-waves.mp3',
     'soft-rain': '/audio/soft-rain.mp3',
+    'forest-birds': '/audio/forest-birds.mp3',
   };
 
   if (realAudioFiles[type]) {
