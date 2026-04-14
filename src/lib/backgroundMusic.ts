@@ -57,15 +57,7 @@ export const generateBackgroundMusic = async (
         break;
       }
       case 'ocean-waves': {
-        let lp = 0;
-        for (let i = 0; i < length; i++) {
-          const t = i / sampleRate;
-          const raw = rng() * 2 - 1;
-          lp += 0.008 * (raw - lp);
-          const wave = Math.pow(Math.max(0, Math.sin(2 * Math.PI * (1 / 8) * t)), 2);
-          const secondWave = Math.pow(Math.max(0, Math.sin(2 * Math.PI * (1 / 13) * t + 1)), 2) * 0.6;
-          data[i] = lp * (wave + secondWave) * 0.6;
-        }
+        // Will be handled by loading the real audio file below
         break;
       }
       case 'forest-birds': {
