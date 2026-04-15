@@ -6,7 +6,7 @@ import { Mic, Square, Upload, Music, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-import { generateBackgroundMusic, mixAudioFiles, BackgroundSoundType, SOUND_LABELS } from "@/lib/backgroundMusic";
+import { generateBackgroundMusic, mixAudioFiles, preloadBackgroundAudio, BackgroundSoundType, SOUND_LABELS } from "@/lib/backgroundMusic";
 
 interface AudioRecorderProps {
   userId: string;
@@ -25,6 +25,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [mixingAudio, setMixingAudio] = useState(false);
+  const preloadedBgRef = useRef<AudioBuffer | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -135,7 +136,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
           setMixingAudio(true);
           try {
             const recordingDuration = (Date.now() - recordingStartTime) / 1000;
-            const bgMusicBlob = await generateBackgroundMusic(recordingDuration, backgroundMusic);
+            const bgMusicBlob = await generateBackgroundMusic(recordingDuration, backgroundMusic, preloadedBgRef.current);
             if (bgMusicBlob) {
               const bgVolume = backgroundMusic === 'night-crickets' ? 0.25
                 : ['soft-rain', 'brown-noise', 'ocean-waves'].includes(backgroundMusic) ? 0.13
@@ -161,6 +162,13 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
       console.log("MediaRecorder started, state:", mediaRecorder.state);
       setIsRecording(true);
       setRecordingStartTime(Date.now());
+
+      // Pre-load background audio in parallel while user records
+      if (backgroundMusic !== 'none') {
+        preloadBackgroundAudio(backgroundMusic).then(buf => {
+          preloadedBgRef.current = buf;
+        });
+      }
       
       toast.info("Recording started! Speak from your heart 💖");
     } catch (error) {
