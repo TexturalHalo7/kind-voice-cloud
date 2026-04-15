@@ -41,6 +41,7 @@ export const generateBackgroundMusic = async (
     'soft-rain': '/audio/soft-rain.mp3',
     'forest-birds': '/audio/forest-birds.mp3',
     'thunder-rain': '/audio/thunder-rain.mp3',
+    'brown-noise': '/audio/brown-noise.mp3',
   };
 
   if (realAudioFiles[type]) {
