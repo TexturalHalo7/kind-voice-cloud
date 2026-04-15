@@ -30,12 +30,13 @@ const Leaderboard = () => {
 
       if (!error && data) {
         // Take top 10 for all-time (already sorted by message_count)
-        setAllTimeLeaders(data.slice(0, 10));
+        const active = data.filter((p) => p.message_count > 0);
+        setAllTimeLeaders(active.slice(0, 10));
         
         // Sort by monthly for monthly leaders
-        const monthlyData = [...data].sort((a, b) => 
+        const monthlyData = [...active].sort((a, b) => 
           b.monthly_message_count - a.monthly_message_count
-        ).slice(0, 10);
+        ).filter((p) => p.monthly_message_count > 0).slice(0, 10);
         setMonthlyLeaders(monthlyData);
       }
       setLoading(false);
