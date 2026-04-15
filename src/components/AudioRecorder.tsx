@@ -137,7 +137,9 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
             const recordingDuration = (Date.now() - recordingStartTime) / 1000;
             const bgMusicBlob = await generateBackgroundMusic(recordingDuration, backgroundMusic);
             if (bgMusicBlob) {
-              const bgVolume = backgroundMusic === 'night-crickets' ? 0.25 : 0.13;
+              const bgVolume = backgroundMusic === 'night-crickets' ? 0.25
+                : ['soft-rain', 'brown-noise', 'ocean-waves'].includes(backgroundMusic) ? 0.13
+                : 0.20;
               const mixed = await mixAudioFiles(audioBlob, bgMusicBlob, 1.0, bgVolume);
               setPreviewBlob(mixed);
             } else {
