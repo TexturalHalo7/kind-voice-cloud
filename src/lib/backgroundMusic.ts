@@ -56,7 +56,8 @@ function createRng(seed: number) {
 
 export const generateBackgroundMusic = async (
   durationSeconds: number,
-  type: BackgroundSoundType
+  type: BackgroundSoundType,
+  preloadedBuffer?: AudioBuffer | null
 ): Promise<Blob | null> => {
   if (type === 'none') return null;
 
@@ -72,11 +73,17 @@ export const generateBackgroundMusic = async (
 
   if (realAudioFiles[type]) {
     try {
-      const response = await fetch(realAudioFiles[type]!);
-      if (!response.ok) throw new Error(`Failed to load ${type} audio`);
-      const arrayBuffer = await response.arrayBuffer();
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const decoded = await audioContext.decodeAudioData(arrayBuffer);
+      let decoded: AudioBuffer;
+      if (preloadedBuffer) {
+        decoded = preloadedBuffer;
+      } else {
+        const response = await fetch(realAudioFiles[type]!);
+        if (!response.ok) throw new Error(`Failed to load ${type} audio`);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        decoded = await audioContext.decodeAudioData(arrayBuffer);
+        await audioContext.close();
+      }
       
       const sampleRate = decoded.sampleRate;
       const targetLength = Math.floor(sampleRate * durationSeconds);
@@ -87,7 +94,6 @@ export const generateBackgroundMusic = async (
       source.connect(offlineCtx.destination);
       source.start(0);
       const rendered = await offlineCtx.startRendering();
-      await audioContext.close();
       return bufferToWave(rendered, rendered.length);
     } catch (e) {
       console.error(`Failed to load ${type} file, falling back to synthesis`, e);
