@@ -42,6 +42,7 @@ export const generateBackgroundMusic = async (
     'forest-birds': '/audio/forest-birds.mp3',
     'thunder-rain': '/audio/thunder-rain.mp3',
     'brown-noise': '/audio/brown-noise.mp3',
+    'night-crickets': '/audio/night-crickets.mp3',
   };
 
   if (realAudioFiles[type]) {
@@ -112,22 +113,7 @@ export const generateBackgroundMusic = async (
         break;
       }
       case 'night-crickets': {
-        let lp = 0;
-        for (let i = 0; i < length; i++) {
-          const t = i / sampleRate;
-          const raw = rng() * 2 - 1;
-          lp += 0.002 * (raw - lp);
-          let sample = lp * 0.15;
-          const pulse = Math.sin(2 * Math.PI * 14 * t);
-          if (pulse > 0.2) {
-            sample += Math.sin(2 * Math.PI * 4800 * t) * (pulse - 0.2) * 0.06;
-          }
-          const pulse2 = Math.sin(2 * Math.PI * 11 * t + 2);
-          if (pulse2 > 0.3) {
-            sample += Math.sin(2 * Math.PI * 5200 * t) * (pulse2 - 0.3) * 0.04;
-          }
-          data[i] = sample;
-        }
+        // Handled by real audio file above
         break;
       }
     }
