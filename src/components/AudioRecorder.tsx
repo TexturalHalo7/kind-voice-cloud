@@ -162,6 +162,13 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
       console.log("MediaRecorder started, state:", mediaRecorder.state);
       setIsRecording(true);
       setRecordingStartTime(Date.now());
+
+      // Pre-load background audio in parallel while user records
+      if (backgroundMusic !== 'none') {
+        preloadBackgroundAudio(backgroundMusic).then(buf => {
+          preloadedBgRef.current = buf;
+        });
+      }
       
       toast.info("Recording started! Speak from your heart 💖");
     } catch (error) {
