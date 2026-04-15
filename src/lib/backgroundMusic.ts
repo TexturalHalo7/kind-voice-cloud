@@ -20,6 +20,31 @@ export const SOUND_LABELS: Record<BackgroundSoundType, string> = {
   'night-crickets': 'Night Ambience / Crickets',
 };
 
+// Pre-load and decode a background audio file for fast mixing later
+export const preloadBackgroundAudio = async (type: BackgroundSoundType): Promise<AudioBuffer | null> => {
+  const realAudioFiles: Partial<Record<BackgroundSoundType, string>> = {
+    'ocean-waves': '/audio/ocean-waves.mp3',
+    'soft-rain': '/audio/soft-rain.mp3',
+    'forest-birds': '/audio/forest-birds.mp3',
+    'thunder-rain': '/audio/thunder-rain.mp3',
+    'brown-noise': '/audio/brown-noise.mp3',
+    'night-crickets': '/audio/night-crickets.mp3',
+  };
+  if (type === 'none' || !realAudioFiles[type]) return null;
+  try {
+    const response = await fetch(realAudioFiles[type]!);
+    if (!response.ok) throw new Error(`Failed to load ${type}`);
+    const arrayBuffer = await response.arrayBuffer();
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const decoded = await audioContext.decodeAudioData(arrayBuffer);
+    await audioContext.close();
+    return decoded;
+  } catch (e) {
+    console.error('Failed to preload background audio', e);
+    return null;
+  }
+};
+
 // Deterministic pseudo-random number generator
 function createRng(seed: number) {
   let s = seed;
