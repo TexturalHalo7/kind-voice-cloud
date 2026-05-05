@@ -32,6 +32,11 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
     if (a) {
       a.muted = false;
       a.volume = 1;
+      if (audioUrl) {
+        a.play().catch(() => {
+          // Autoplay may be blocked; user can press play manually
+        });
+      }
     }
   }, [audioUrl]);
 
