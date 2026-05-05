@@ -3,13 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, User, MessageCircle, Loader2 } from "lucide-react";
+import { Search, MessageCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import UserAvatar from "@/components/UserAvatar";
 
 interface SearchResult {
   user_id: string;
   username: string;
+  avatar_id?: string;
 }
 
 interface UserSearchProps {
@@ -48,6 +50,7 @@ const UserSearch = ({ currentUserId }: UserSearchProps) => {
         .map((profile) => ({
           user_id: profile.user_id,
           username: profile.username,
+          avatar_id: profile.avatar_id,
         }));
 
       setResults(filtered);
@@ -127,9 +130,7 @@ const UserSearch = ({ currentUserId }: UserSearchProps) => {
                 className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="w-4 h-4 text-primary" />
-                  </div>
+                  <UserAvatar avatarId={result.avatar_id} size="sm" />
                   <span className="font-medium">{result.username}</span>
                 </div>
                 <Button
