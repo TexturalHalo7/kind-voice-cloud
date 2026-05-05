@@ -191,6 +191,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_id: string
           created_at: string
           email: string | null
           id: string
@@ -204,6 +205,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          avatar_id?: string
           created_at?: string
           email?: string | null
           id?: string
@@ -217,6 +219,7 @@ export type Database = {
           username: string
         }
         Update: {
+          avatar_id?: string
           created_at?: string
           email?: string | null
           id?: string
@@ -314,6 +317,7 @@ export type Database = {
       get_leaderboard_profiles: {
         Args: never
         Returns: {
+          avatar_id: string
           message_count: number
           monthly_message_count: number
           total_thanks_received: number
@@ -326,6 +330,7 @@ export type Database = {
         Args: { category_filter?: string; limit_count?: number }
         Returns: {
           audio_url: string
+          avatar_id: string
           category: string
           created_at: string
           duration_seconds: number

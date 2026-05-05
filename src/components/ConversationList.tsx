@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
 import { MessageCircle, Mic } from "lucide-react";
+import UserAvatar from "@/components/UserAvatar";
 
 interface Conversation {
   id: string;
@@ -12,6 +13,7 @@ interface Conversation {
   other_user?: {
     username: string;
     user_id: string;
+    avatar_id?: string;
   };
   last_message?: {
     content: string | null;
@@ -68,7 +70,7 @@ const ConversationList = ({
         // Get other user's profile
         const { data: profile } = await supabase
           .from("profiles")
-          .select("username, user_id")
+          .select("username, user_id, avatar_id")
           .eq("user_id", otherUserId)
           .maybeSingle();
 
@@ -158,9 +160,7 @@ const ConversationList = ({
             }`}
           >
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-semibold shrink-0">
-                {conversation.other_user?.username?.charAt(0).toUpperCase() || "?"}
-              </div>
+              <UserAvatar avatarId={conversation.other_user?.avatar_id} size="md" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <span className="font-medium truncate">

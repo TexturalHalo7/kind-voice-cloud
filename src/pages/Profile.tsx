@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { ArrowLeft, Calendar, Flame, Heart, MessageCircle, Save, Star, User as UserIcon, ThumbsUp } from "lucide-react";
 import { format } from "date-fns";
+import { AVATARS } from "@/lib/avatars";
+import UserAvatar from "@/components/UserAvatar";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [username, setUsername] = useState("");
+  const [avatarId, setAvatarId] = useState<string>("sun");
 
   useEffect(() => {
     const checkUser = async () => {
@@ -36,6 +39,7 @@ const Profile = () => {
       
       setProfile(profileData);
       setUsername(profileData?.username || "");
+      setAvatarId(profileData?.avatar_id || "sun");
       setLoading(false);
     };
 
@@ -62,12 +66,12 @@ const Profile = () => {
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({ username: username.trim() })
+        .update({ username: username.trim(), avatar_id: avatarId })
         .eq("user_id", user?.id);
 
       if (error) throw error;
       
-      setProfile({ ...profile, username: username.trim() });
+      setProfile({ ...profile, username: username.trim(), avatar_id: avatarId });
       toast.success("Profile updated successfully!");
     } catch (error: any) {
       toast.error("Failed to update profile: " + error.message);
@@ -128,6 +132,27 @@ const Profile = () => {
             <CardDescription>Update your display name</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex flex-col items-center gap-3">
+              <UserAvatar avatarId={avatarId} size="xl" />
+              <p className="text-sm font-medium text-muted-foreground">Choose your icon</p>
+              <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 w-full">
+                {AVATARS.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => setAvatarId(a.id)}
+                    className={`aspect-square rounded-full flex items-center justify-center text-2xl transition-all ${a.bg} ${
+                      avatarId === a.id
+                        ? "ring-2 ring-primary ring-offset-2 scale-110"
+                        : "hover:scale-105 opacity-80 hover:opacity-100"
+                    }`}
+                    aria-label={a.label}
+                  >
+                    {a.emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Username</label>
               <Input
@@ -139,7 +164,7 @@ const Profile = () => {
             </div>
             <Button
               onClick={handleSave}
-              disabled={saving || username === profile?.username}
+              disabled={saving || (username === profile?.username && avatarId === profile?.avatar_id)}
               className="bg-gradient-warm hover:opacity-90 rounded-xl"
             >
               <Save className="w-4 h-4 mr-2" />

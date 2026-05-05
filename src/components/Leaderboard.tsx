@@ -3,12 +3,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, Medal, Award, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import UserAvatar from "@/components/UserAvatar";
 
 interface LeaderboardEntry {
   username: string;
   user_id: string;
   message_count: number;
   monthly_message_count: number;
+  avatar_id?: string;
 }
 
 const Leaderboard = () => {
@@ -100,6 +102,7 @@ const Leaderboard = () => {
               }`}
             >
               <div className="flex-shrink-0">{getIcon(index)}</div>
+              <UserAvatar avatarId={leader.avatar_id} size="sm" />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate">{leader.username}</p>
               </div>
