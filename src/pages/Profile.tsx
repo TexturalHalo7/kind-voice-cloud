@@ -10,6 +10,7 @@ import { ArrowLeft, Calendar, Flame, Heart, MessageCircle, Save, Star, User as U
 import { format } from "date-fns";
 import { AVATARS } from "@/lib/avatars";
 import UserAvatar from "@/components/UserAvatar";
+import MyVoiceMessages from "@/components/MyVoiceMessages";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -252,6 +253,9 @@ const Profile = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* My Voice Messages */}
+        {user && <MyVoiceMessages userId={user.id} />}
       </main>
     </div>
   );
