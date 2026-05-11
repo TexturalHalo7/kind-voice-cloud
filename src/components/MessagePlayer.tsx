@@ -6,6 +6,7 @@ import { Play, RefreshCw, Sparkles, Heart, ThumbsUp, Filter } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import StartConversationButton from "./StartConversationButton";
+import ReportMessageDialog from "./ReportMessageDialog";
 
 interface MessagePlayerProps {
   userId?: string;
@@ -317,6 +318,12 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
                         otherUserId={messageOwnerId}
                         voiceMessageId={messageId || undefined}
                         className="rounded-full px-4 transition-all duration-300 hover:bg-blue-100 hover:text-blue-600"
+                      />
+                    )}
+                    {userId && messageId && messageOwnerId && userId !== messageOwnerId && (
+                      <ReportMessageDialog
+                        voiceMessageId={messageId}
+                        reporterId={userId}
                       />
                     )}
                   </div>

@@ -234,6 +234,36 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_message_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+          voice_message_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+          voice_message_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+          voice_message_id?: string
+        }
+        Relationships: []
+      }
       voice_message_requests: {
         Row: {
           created_at: string
