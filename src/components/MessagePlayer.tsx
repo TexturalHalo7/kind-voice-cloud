@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import StartConversationButton from "./StartConversationButton";
 import ReportMessageDialog from "./ReportMessageDialog";
+import UpgradeDialog from "./UpgradeDialog";
+import { usePremium } from "@/hooks/usePremium";
 
 interface MessagePlayerProps {
   userId?: string;
@@ -15,6 +17,8 @@ interface MessagePlayerProps {
 type MessageCategory = "all" | "general" | "encouragement" | "gratitude" | "motivation";
 
 const MessagePlayer = ({ userId }: MessagePlayerProps) => {
+  const { premium } = usePremium();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState<string>("");
@@ -127,6 +131,10 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
   const handleFavorite = async () => {
     if (!messageId || !userId) {
       toast.error("Please log in to save favorites");
+      return;
+    }
+    if (!premium && !isFavorited) {
+      setUpgradeOpen(true);
       return;
     }
 
