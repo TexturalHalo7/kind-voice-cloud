@@ -277,17 +277,29 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
               <label className="text-sm font-medium flex items-center gap-2">
                 <Music className="w-4 h-4 text-primary" />
                 Background Sound
+                {!premium && <Lock className="w-3 h-3 text-muted-foreground" />}
               </label>
-              <Select value={backgroundMusic} onValueChange={(v: BackgroundSoundType) => setBackgroundMusic(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select background sound" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50 max-h-60">
-                  {(Object.entries(SOUND_LABELS) as [BackgroundSoundType, string][]).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {premium ? (
+                <Select value={backgroundMusic} onValueChange={(v: BackgroundSoundType) => setBackgroundMusic(v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select background sound" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50 max-h-60">
+                    {(Object.entries(SOUND_LABELS) as [BackgroundSoundType, string][]).map(([key, label]) => (
+                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigate("/pricing")}
+                  className="w-full flex items-center justify-between h-10 px-3 rounded-md border border-input bg-muted/40 text-sm text-muted-foreground hover:bg-muted/60 transition"
+                >
+                  <span>Unlock background sounds with Premium</span>
+                  <Lock className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </>
         )}
