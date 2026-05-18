@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import StartConversationButton from "./StartConversationButton";
 import ReportMessageDialog from "./ReportMessageDialog";
+import UpgradeDialog from "./UpgradeDialog";
+import { usePremium } from "@/hooks/usePremium";
 
 interface MessagePlayerProps {
   userId?: string;
@@ -15,6 +17,8 @@ interface MessagePlayerProps {
 type MessageCategory = "all" | "general" | "encouragement" | "gratitude" | "motivation";
 
 const MessagePlayer = ({ userId }: MessagePlayerProps) => {
+  const { premium } = usePremium();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState<string>("");
@@ -129,6 +133,10 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
       toast.error("Please log in to save favorites");
       return;
     }
+    if (!premium && !isFavorited) {
+      setUpgradeOpen(true);
+      return;
+    }
 
     try {
       if (isFavorited) {
@@ -195,6 +203,8 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
   };
 
   return (
+    <>
+    <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="Saving favorites" />
     <Card className="shadow-glow bg-white/95 backdrop-blur-sm animate-in fade-in slide-in-from-right duration-700">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -351,6 +361,7 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
         </div>
       </CardContent>
     </Card>
+    </>
   );
 };
 

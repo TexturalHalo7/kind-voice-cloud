@@ -13,6 +13,7 @@ import NotificationBell from "@/components/NotificationBell";
 import VoiceRequestForm from "@/components/VoiceRequestForm";
 import VoiceRequestSuggestions from "@/components/VoiceRequestSuggestions";
 import RecordForRequestDialog from "@/components/RecordForRequestDialog";
+import { usePremium } from "@/hooks/usePremium";
 
 
 interface VoiceRequest {
@@ -26,6 +27,7 @@ interface VoiceRequest {
 const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { premium } = usePremium();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -157,6 +159,22 @@ const Dashboard = () => {
             </Button>
             
             {user && <NotificationBell userId={user.id} />}
+
+            {!premium ? (
+              <Button
+                onClick={() => navigate("/pricing")}
+                size="sm"
+                className="rounded-full bg-primary"
+              >
+                <Sparkles className="w-4 h-4 mr-1" />
+                Upgrade
+              </Button>
+            ) : (
+              <div className="flex items-center gap-1 bg-primary/20 text-white px-3 py-1 rounded-full text-xs font-semibold" title="Premium member">
+                <Sparkles className="w-3 h-3" />
+                Premium
+              </div>
+            )}
             
             <Button
               onClick={() => navigate("/favorites")}

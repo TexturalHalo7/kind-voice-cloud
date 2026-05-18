@@ -6,14 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, Flame, Heart, MessageCircle, Save, Star, User as UserIcon, ThumbsUp } from "lucide-react";
+import { ArrowLeft, Calendar, Flame, Heart, MessageCircle, Save, Star, User as UserIcon, ThumbsUp, Sparkles, Lock, CreditCard } from "lucide-react";
 import { format } from "date-fns";
-import { AVATARS } from "@/lib/avatars";
+import { AVATARS, PREMIUM_AVATARS, isPremiumAvatar } from "@/lib/avatars";
 import UserAvatar from "@/components/UserAvatar";
 import MyVoiceMessages from "@/components/MyVoiceMessages";
+import { usePremium } from "@/hooks/usePremium";
+import { supabase as supabaseClient } from "@/integrations/supabase/client";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { premium, plan } = usePremium();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -152,6 +155,47 @@ const Profile = () => {
                     {a.emoji}
                   </button>
                 ))}
+              </div>
+              <div className="w-full pt-2">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    Premium icons
+                  </p>
+                  {!premium && (
+                    <button type="button" onClick={() => navigate("/pricing")} className="text-xs text-primary underline">
+                      Unlock
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 w-full">
+                  {PREMIUM_AVATARS.map((a) => {
+                    const locked = !premium;
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        disabled={locked}
+                        onClick={() => !locked && setAvatarId(a.id)}
+                        className={`relative aspect-square rounded-full flex items-center justify-center text-2xl transition-all ${a.bg} ${
+                          avatarId === a.id
+                            ? "ring-2 ring-primary ring-offset-2 scale-110"
+                            : locked
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:scale-105 opacity-90 hover:opacity-100"
+                        }`}
+                        aria-label={a.label}
+                      >
+                        {a.emoji}
+                        {locked && (
+                          <span className="absolute inset-0 rounded-full flex items-center justify-center bg-black/30">
+                            <Lock className="w-3.5 h-3.5 text-white" />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
             <div className="space-y-2">

@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Heart, Trash2 } from "lucide-react";
+import { ArrowLeft, Heart, Trash2, Sparkles, Lock } from "lucide-react";
+import { usePremium } from "@/hooks/usePremium";
 
 interface FavoriteMessage {
   id: string;
@@ -22,6 +23,7 @@ interface FavoriteMessage {
 
 const Favorites = () => {
   const navigate = useNavigate();
+  const { premium, loading: premiumLoading } = usePremium();
   const [favorites, setFavorites] = useState<FavoriteMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -135,7 +137,23 @@ const Favorites = () => {
       </header>
 
       <main className="container mx-auto px-4 py-12 max-w-3xl">
-        {favorites.length === 0 ? (
+        {!premiumLoading && !premium ? (
+          <Card className="shadow-glow bg-white/95 backdrop-blur-sm">
+            <CardContent className="py-12 text-center space-y-4">
+              <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                <Lock className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold">Favorites is a Premium feature</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Save the messages that move you and revisit them whenever you need a lift. Upgrade to unlock.
+              </p>
+              <Button onClick={() => navigate("/pricing")} className="bg-primary rounded-xl">
+                <Sparkles className="w-4 h-4 mr-2" />
+                See Premium plans
+              </Button>
+            </CardContent>
+          </Card>
+        ) : favorites.length === 0 ? (
           <Card className="shadow-glow bg-white/95 backdrop-blur-sm">
             <CardContent className="py-12 text-center">
               <Heart className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
