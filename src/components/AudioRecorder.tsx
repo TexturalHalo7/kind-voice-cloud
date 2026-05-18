@@ -2,11 +2,13 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mic, Square, Upload, Music, Tag } from "lucide-react";
+import { Mic, Square, Upload, Music, Tag, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { generateBackgroundMusic, mixAudioFiles, preloadBackgroundAudio, BackgroundSoundType, SOUND_LABELS } from "@/lib/backgroundMusic";
+import { usePremium } from "@/hooks/usePremium";
+import { useNavigate } from "react-router-dom";
 
 interface AudioRecorderProps {
   userId: string;
@@ -15,6 +17,8 @@ interface AudioRecorderProps {
 type MessageCategory = "general" | "encouragement" | "gratitude" | "motivation";
 
 const AudioRecorder = ({ userId }: AudioRecorderProps) => {
+  const { premium } = usePremium();
+  const navigate = useNavigate();
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [uploading, setUploading] = useState(false);
