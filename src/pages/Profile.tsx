@@ -6,14 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, Flame, Heart, MessageCircle, Save, Star, User as UserIcon, ThumbsUp } from "lucide-react";
+import { ArrowLeft, Calendar, Flame, Heart, MessageCircle, Save, Star, User as UserIcon, ThumbsUp, Sparkles, Lock, CreditCard } from "lucide-react";
 import { format } from "date-fns";
-import { AVATARS } from "@/lib/avatars";
+import { AVATARS, PREMIUM_AVATARS, isPremiumAvatar } from "@/lib/avatars";
 import UserAvatar from "@/components/UserAvatar";
 import MyVoiceMessages from "@/components/MyVoiceMessages";
+import { usePremium } from "@/hooks/usePremium";
+import { supabase as supabaseClient } from "@/integrations/supabase/client";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { premium, plan } = usePremium();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
