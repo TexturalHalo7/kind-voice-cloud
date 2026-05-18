@@ -156,6 +156,47 @@ const Profile = () => {
                   </button>
                 ))}
               </div>
+              <div className="w-full pt-2">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    Premium icons
+                  </p>
+                  {!premium && (
+                    <button type="button" onClick={() => navigate("/pricing")} className="text-xs text-primary underline">
+                      Unlock
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 w-full">
+                  {PREMIUM_AVATARS.map((a) => {
+                    const locked = !premium;
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        disabled={locked}
+                        onClick={() => !locked && setAvatarId(a.id)}
+                        className={`relative aspect-square rounded-full flex items-center justify-center text-2xl transition-all ${a.bg} ${
+                          avatarId === a.id
+                            ? "ring-2 ring-primary ring-offset-2 scale-110"
+                            : locked
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:scale-105 opacity-90 hover:opacity-100"
+                        }`}
+                        aria-label={a.label}
+                      >
+                        {a.emoji}
+                        {locked && (
+                          <span className="absolute inset-0 rounded-full flex items-center justify-center bg-black/30">
+                            <Lock className="w-3.5 h-3.5 text-white" />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Username</label>
