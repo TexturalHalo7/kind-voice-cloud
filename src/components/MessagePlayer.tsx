@@ -359,6 +359,7 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
         </div>
       </CardContent>
     </Card>
+    
   );
 };
 
