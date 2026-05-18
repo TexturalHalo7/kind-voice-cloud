@@ -154,7 +154,6 @@ const Favorites = () => {
             </CardContent>
           </Card>
         ) : favorites.length === 0 ? (
-        {favorites.length === 0 ? (
           <Card className="shadow-glow bg-white/95 backdrop-blur-sm">
             <CardContent className="py-12 text-center">
               <Heart className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
