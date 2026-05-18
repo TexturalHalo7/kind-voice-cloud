@@ -203,6 +203,8 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
   };
 
   return (
+    <>
+    <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="Saving favorites" />
     <Card className="shadow-glow bg-white/95 backdrop-blur-sm animate-in fade-in slide-in-from-right duration-700">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -359,7 +361,7 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
         </div>
       </CardContent>
     </Card>
-    
+    </>
   );
 };
 
