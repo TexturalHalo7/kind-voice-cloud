@@ -4,7 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Heart, LogOut, Sparkles, Star, User as UserIcon, Flame, BookHeart, MessageCircle } from "lucide-react";
+import { Heart, LogOut, Sparkles, Star, User as UserIcon, Flame, BookHeart, MessageCircle, Menu } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import AudioRecorder from "@/components/AudioRecorder";
 import MessagePlayer from "@/components/MessagePlayer";
 import Leaderboard from "@/components/Leaderboard";
@@ -118,7 +126,8 @@ const Dashboard = () => {
             <Heart className="w-8 h-8 text-white" fill="currentColor" />
             <h1 className="text-2xl font-bold text-white">Voices of Kindness</h1>
           </div>
-          <div className="flex items-center gap-4">
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-4">
             {/* Streak Badge */}
             {profile?.streak_count > 0 && (
               <div className="flex items-center gap-1 bg-orange-500/20 px-3 py-1 rounded-full" title="Daily Streak">
@@ -207,6 +216,64 @@ const Dashboard = () => {
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </Button>
+          </div>
+
+          {/* Mobile nav */}
+          <div className="flex md:hidden items-center gap-2">
+            {profile?.streak_count > 0 && (
+              <div className="flex items-center gap-1 bg-orange-500/20 px-2 py-1 rounded-full" title="Daily Streak">
+                <Flame className="w-4 h-4 text-orange-400" />
+                <span className="text-orange-300 font-semibold text-xs">{profile.streak_count}</span>
+              </div>
+            )}
+            {user && <NotificationBell userId={user.id} />}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-background">
+                <DropdownMenuLabel>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">{profile?.username}</span>
+                    {badge && (
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: badge.stars }).map((_, i) => (
+                          <Star key={i} className={`w-3 h-3 ${badge.color}`} fill="currentColor" />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground font-normal">
+                    {profile?.message_count || 0} messages shared
+                  </p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/profile")}>
+                  <UserIcon className="w-4 h-4 mr-2" /> My Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/favorites")}>
+                  <BookHeart className="w-4 h-4 mr-2" /> Favorites
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/conversations")}>
+                  <MessageCircle className="w-4 h-4 mr-2" /> Messages
+                </DropdownMenuItem>
+                {!premium ? (
+                  <DropdownMenuItem onClick={() => navigate("/pricing")}>
+                    <Sparkles className="w-4 h-4 mr-2" /> Upgrade
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem disabled>
+                    <Sparkles className="w-4 h-4 mr-2" /> Premium
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="w-4 h-4 mr-2" /> Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
