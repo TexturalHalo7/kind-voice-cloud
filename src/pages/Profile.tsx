@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { AVATARS, PREMIUM_AVATARS, isPremiumAvatar } from "@/lib/avatars";
 import UserAvatar from "@/components/UserAvatar";
 import MyVoiceMessages from "@/components/MyVoiceMessages";
+import Achievements from "@/components/Achievements";
 import { usePremium } from "@/hooks/usePremium";
 import { supabase as supabaseClient } from "@/integrations/supabase/client";
 
@@ -300,6 +301,9 @@ const Profile = () => {
 
         {/* My Voice Messages */}
         {user && <MyVoiceMessages userId={user.id} />}
+
+        {/* Achievements */}
+        <Achievements profile={profile} />
       </main>
     </div>
   );
