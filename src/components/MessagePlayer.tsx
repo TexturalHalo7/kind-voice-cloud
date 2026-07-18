@@ -215,7 +215,7 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
 
   return (
     <>
-    <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="Saving favorites" />
+    <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="You've reached the free limit of 5 saved favorites. Unlimited favorites" />
     <Card className="shadow-glow bg-white/95 backdrop-blur-sm animate-in fade-in slide-in-from-right duration-700">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
