@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Heart, Trash2, Sparkles, Lock } from "lucide-react";
+import { ArrowLeft, Heart, Trash2, Sparkles } from "lucide-react";
 import { usePremium } from "@/hooks/usePremium";
 
 interface FavoriteMessage {
@@ -137,23 +137,22 @@ const Favorites = () => {
       </header>
 
       <main className="container mx-auto px-4 py-12 max-w-3xl">
-        {!premiumLoading && !premium ? (
-          <Card className="shadow-glow bg-white/95 backdrop-blur-sm">
-            <CardContent className="py-12 text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                <Lock className="w-8 h-8 text-primary" />
+        {!premiumLoading && !premium && (
+          <Card className="shadow-glow bg-white/95 backdrop-blur-sm mb-4">
+            <CardContent className="py-4 flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-primary" />
+                <p className="text-sm text-muted-foreground">
+                  Free plan: {favorites.length}/5 favorites saved. Upgrade for unlimited.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold">Favorites is a Premium feature</h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                Save the messages that move you and revisit them whenever you need a lift. Upgrade to unlock.
-              </p>
-              <Button onClick={() => navigate("/pricing")} className="bg-primary rounded-xl">
-                <Sparkles className="w-4 h-4 mr-2" />
-                See Premium plans
+              <Button onClick={() => navigate("/pricing")} size="sm" className="bg-primary rounded-full">
+                See plans
               </Button>
             </CardContent>
           </Card>
-        ) : favorites.length === 0 ? (
+        )}
+        {favorites.length === 0 ? (
           <Card className="shadow-glow bg-white/95 backdrop-blur-sm">
             <CardContent className="py-12 text-center">
               <Heart className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
