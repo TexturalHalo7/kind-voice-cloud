@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Award, MessageCircle, Flame, ThumbsUp, Calendar } from "lucide-react";
+import { Award, MessageCircle, Flame, ThumbsUp, Heart, Headphones, Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 type TierName = "Bronze" | "Silver" | "Gold" | "Diamond";
 
@@ -21,17 +23,44 @@ const ACHIEVEMENTS: AchievementDef[] = [
     description: "Send voice messages to spread kindness.",
     icon: MessageCircle,
     unit: "messages sent",
-    tiers: [10, 50, 100, 250],
+    tiers: [1, 20, 80, 500],
     getValue: (p) => p?.message_count || 0,
   },
   {
-    key: "monthly",
-    label: "Monthly Star",
-    description: "Send voice messages this month.",
-    icon: Calendar,
-    unit: "messages this month",
-    tiers: [5, 20, 50, 100],
-    getValue: (p) => p?.monthly_message_count || 0,
+    key: "thanks",
+    label: "Heartwarmer",
+    description: "Receive likes from listeners.",
+    icon: Heart,
+    unit: "likes received",
+    tiers: [1, 50, 80, 400],
+    getValue: (p) => p?.total_thanks_received || 0,
+  },
+  {
+    key: "general",
+    label: "Positivity Spreader",
+    description: "Send general positivity voice messages.",
+    icon: Sparkles,
+    unit: "positivity messages sent",
+    tiers: [1, 20, 60, 300],
+    getValue: (p) => p?.general_count || 0,
+  },
+  {
+    key: "likesGiven",
+    label: "Generous Listener",
+    description: "Give likes to voice messages you enjoyed.",
+    icon: ThumbsUp,
+    unit: "likes given",
+    tiers: [1, 20, 100, 500],
+    getValue: (p) => p?.likes_given || 0,
+  },
+  {
+    key: "listened",
+    label: "Attentive Ear",
+    description: "Listen to voice messages from the community.",
+    icon: Headphones,
+    unit: "messages listened to",
+    tiers: [1, 20, 100, 500],
+    getValue: (p) => p?.listened_count || 0,
   },
   {
     key: "streak",
@@ -39,17 +68,8 @@ const ACHIEVEMENTS: AchievementDef[] = [
     description: "Keep your daily recording streak going.",
     icon: Flame,
     unit: "day streak",
-    tiers: [3, 7, 30, 100],
+    tiers: [1, 7, 30, 100],
     getValue: (p) => p?.streak_count || 0,
-  },
-  {
-    key: "thanks",
-    label: "Heartwarmer",
-    description: "Receive thanks from listeners.",
-    icon: ThumbsUp,
-    unit: "thanks received",
-    tiers: [5, 25, 100, 500],
-    getValue: (p) => p?.total_thanks_received || 0,
   },
 ];
 
@@ -73,6 +93,39 @@ function getTier(value: number, tiers: [number, number, number, number]): { curr
 }
 
 const Achievements = ({ profile }: { profile: any }) => {
+  const [extra, setExtra] = useState<{ general_count: number; likes_given: number; listened_count: number }>({
+    general_count: 0,
+    likes_given: 0,
+    listened_count: 0,
+  });
+
+  useEffect(() => {
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const [{ count: generalCount }, { count: likesGiven }] = await Promise.all([
+        supabase
+          .from("voice_messages")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("category", "general"),
+        supabase
+          .from("message_thanks")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id),
+      ]);
+      const listened = parseInt(localStorage.getItem("listened_count") || "0", 10) || 0;
+      setExtra({
+        general_count: generalCount || 0,
+        likes_given: likesGiven || 0,
+        listened_count: listened,
+      });
+    };
+    load();
+  }, [profile]);
+
+  const merged = { ...profile, ...extra };
+
   return (
     <Card className="shadow-glow bg-white/95 backdrop-blur-sm">
       <CardHeader>
@@ -84,20 +137,20 @@ const Achievements = ({ profile }: { profile: any }) => {
       </CardHeader>
       <CardContent>
         <TooltipProvider delayDuration={100}>
-          <div className="space-y-6">
+          <div className="space-y-5">
             {ACHIEVEMENTS.map((a) => {
-              const value = a.getValue(profile);
+              const value = a.getValue(merged);
               const { current, nextIndex } = getTier(value, a.tiers);
               const Icon = a.icon;
               return (
                 <div key={a.key}>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-semibold">{a.label}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-xs font-semibold">{a.label}</p>
+                    <p className="text-[10px] text-muted-foreground">
                       {current ? `${current} tier` : "Not yet unlocked"}
                     </p>
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 gap-1.5 max-w-[280px]">
                     {a.tiers.map((threshold, i) => {
                       const tierName = TIER_NAMES[i];
                       const unlocked = value >= threshold;
@@ -113,12 +166,12 @@ const Achievements = ({ profile }: { profile: any }) => {
                         <Tooltip key={i}>
                           <TooltipTrigger asChild>
                             <div
-                              className={`aspect-square rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-help ring-1 ${style.ring} ${style.bg} ${
+                              className={`aspect-square rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all cursor-help ring-1 ${style.ring} ${style.bg} ${
                                 unlocked ? "hover:scale-105" : "grayscale opacity-70"
                               }`}
                             >
-                              <Icon className={`w-6 h-6 ${style.icon}`} />
-                              <span className={`text-[10px] font-semibold ${style.label}`}>{tierName}</span>
+                              <Icon className={`w-4 h-4 ${style.icon}`} />
+                              <span className={`text-[9px] font-semibold ${style.label}`}>{tierName}</span>
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="top" className="max-w-[220px]">

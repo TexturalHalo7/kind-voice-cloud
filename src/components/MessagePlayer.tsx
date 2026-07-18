@@ -121,6 +121,11 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
       setMessageOwnerId(selectedMessage.user_id);
       setMessageCategory(selectedMessage.category || "general");
       setThanksCount(selectedMessage.thanks_count || 0);
+      try {
+        const key = "listened_count";
+        const current = parseInt(localStorage.getItem(key) || "0", 10) || 0;
+        localStorage.setItem(key, String(current + 1));
+      } catch {}
       toast.success("Here's a message of kindness for you! 💝");
     } catch (error: any) {
       toast.error("Failed to fetch message: " + error.message);
