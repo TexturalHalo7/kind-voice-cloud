@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mic, Square, Upload, Music, Lock, Heart, Shield } from "lucide-react";
+import { Mic, Square, Upload, Music, Tag, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
@@ -14,27 +14,7 @@ interface AudioRecorderProps {
   userId: string;
 }
 
-type MessageCategory =
-  | "appreciated"
-  | "encouragement"
-  | "congratulate"
-  | "thank-you"
-  | "you-matter";
-
-const KINDNESS_CATEGORIES: {
-  id: MessageCategory;
-  emoji: string;
-  title: string;
-  prompt: string;
-}[] = [
-  { id: "appreciated",   emoji: "❤️", title: "Tell someone they're appreciated", prompt: "Tell someone why they are valued and appreciated." },
-  { id: "encouragement", emoji: "💪", title: "Encourage someone who's anxious", prompt: "Leave a comforting message that could help someone having a difficult day." },
-  { id: "congratulate",  emoji: "🎉", title: "Congratulate someone",             prompt: "Celebrate someone's achievement with genuine happiness." },
-  { id: "thank-you",     emoji: "🙏", title: "Thank someone",                    prompt: "Express sincere gratitude to someone who made a difference." },
-  { id: "you-matter",    emoji: "🌟", title: "Remind someone they matter",       prompt: "Remind someone that their life has value and that they are important." },
-];
-
-const MAX_RECORDING_SECONDS = 30;
+type MessageCategory = "general" | "encouragement" | "gratitude" | "motivation";
 
 const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const { premium } = usePremium();
@@ -45,14 +25,11 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [chosenMimeType, setChosenMimeType] = useState<string>("");
   const [fileExt, setFileExt] = useState<string>("webm");
   const [backgroundMusic, setBackgroundMusic] = useState<BackgroundSoundType>('none');
-  const [category, setCategory] = useState<MessageCategory | null>(null);
-  const [elapsed, setElapsed] = useState(0);
+  const [category, setCategory] = useState<MessageCategory>("general");
   const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [mixingAudio, setMixingAudio] = useState(false);
   const preloadedBgRef = useRef<AudioBuffer | null>(null);
-  const autoStopRef = useRef<number | null>(null);
-  const tickRef = useRef<number | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -62,20 +39,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const rafIdRef = useRef<number | null>(null);
   const [meterLevel, setMeterLevel] = useState(0);
 
-  const activeCategory = KINDNESS_CATEGORIES.find((c) => c.id === category);
-
-  useEffect(() => {
-    return () => {
-      if (autoStopRef.current) window.clearTimeout(autoStopRef.current);
-      if (tickRef.current) window.clearInterval(tickRef.current);
-    };
-  }, []);
-
   const startRecording = async () => {
-    if (!category) {
-      toast.error("Choose a kindness category first");
-      return;
-    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -202,13 +166,6 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
       console.log("MediaRecorder started, state:", mediaRecorder.state);
       setIsRecording(true);
       setRecordingStartTime(Date.now());
-      setElapsed(0);
-      tickRef.current = window.setInterval(() => {
-        setElapsed((e) => Math.min(MAX_RECORDING_SECONDS, e + 1));
-      }, 1000);
-      autoStopRef.current = window.setTimeout(() => {
-        stopRecording();
-      }, MAX_RECORDING_SECONDS * 1000);
 
       // Pre-load background audio in parallel while user records
       if (backgroundMusic !== 'none') {
@@ -225,10 +182,8 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
-      try { mediaRecorderRef.current.stop(); } catch {}
+      mediaRecorderRef.current.stop();
       setIsRecording(false);
-      if (autoStopRef.current) { window.clearTimeout(autoStopRef.current); autoStopRef.current = null; }
-      if (tickRef.current) { window.clearInterval(tickRef.current); tickRef.current = null; }
       if (backgroundMusic !== 'none') {
         toast.info("Processing audio with background music...");
       } else {
@@ -238,7 +193,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   };
 
   const uploadRecording = async () => {
-    if (!userId || !category) return;
+    if (!userId) return;
     
     // Use the preview blob (already mixed) or the original audio blob
     const finalBlob = previewBlob || audioBlob;
@@ -280,7 +235,6 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
       toast.success("Your message of kindness has been shared! 🎉");
       setAudioBlob(null);
       setPreviewBlob(null);
-      setCategory(null);
     } catch (error: any) {
       toast.error("Failed to upload message: " + error.message);
     } finally {
@@ -296,7 +250,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
           Record Your Message
         </CardTitle>
         <CardDescription>
-          Choose a kindness category, then record up to 30 seconds
+          Share a kind word, encouragement, or gratitude
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -304,49 +258,21 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
           <>
             <div className="space-y-2">
               <label className="text-sm font-medium flex items-center gap-2">
-                <Heart className="w-4 h-4 text-primary" />
-                What kind of kindness do you want to send?
+                <Tag className="w-4 h-4 text-primary" />
+                Message Category
               </label>
-              <div className="grid sm:grid-cols-2 gap-2">
-                {KINDNESS_CATEGORIES.map((c) => {
-                  const active = category === c.id;
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => setCategory(c.id)}
-                      className={`text-left rounded-2xl border-2 p-3 transition-all duration-200 hover:scale-[1.01] ${
-                        active
-                          ? "border-primary bg-primary/10 shadow-glow"
-                          : "border-border bg-background hover:border-primary/40"
-                      }`}
-                    >
-                      <div className="flex items-start gap-2">
-                        <span className="text-2xl leading-none">{c.emoji}</span>
-                        <span className="text-sm font-medium text-foreground">{c.title}</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+              <Select value={category} onValueChange={(v: MessageCategory) => setCategory(v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="general">General Positivity</SelectItem>
+                  <SelectItem value="encouragement">Encouragement</SelectItem>
+                  <SelectItem value="gratitude">Gratitude</SelectItem>
+                  <SelectItem value="motivation">Motivation</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-
-            {activeCategory && (
-              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3 space-y-2 animate-in fade-in duration-300">
-                <p className="text-sm text-foreground">
-                  <span className="mr-1">{activeCategory.emoji}</span>
-                  {activeCategory.prompt}
-                </p>
-                <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                  <Shield className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                  <span>
-                    This platform exists to spread kindness. Messages intended to hurt, bully, threaten,
-                    shame or harass others are not welcome.
-                  </span>
-                </div>
-              </div>
-            )}
-
             <div className="space-y-2">
               <label className="text-sm font-medium flex items-center gap-2">
                 <Music className="w-4 h-4 text-primary" />
@@ -383,8 +309,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
             <Button
               onClick={startRecording}
               size="lg"
-              disabled={!category}
-              className="w-32 h-32 rounded-full bg-primary hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg disabled:opacity-40 disabled:hover:scale-100"
+              className="w-32 h-32 rounded-full bg-primary hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg"
             >
               <Mic className="w-12 h-12 text-primary-foreground" />
             </Button>
@@ -407,15 +332,8 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
                   <Square className="w-12 h-12 drop-shadow-lg relative z-10" />
                 </Button>
               </div>
-              <div className="text-sm font-semibold text-destructive tabular-nums">
-                {Math.max(0, MAX_RECORDING_SECONDS - elapsed)}s remaining
-              </div>
               <div className="w-full">
-                <div className="flex justify-between text-xs text-muted-foreground mb-2">
-                  <span>Input level</span>
-                  <span>{elapsed}s / {MAX_RECORDING_SECONDS}s</span>
-                </div>
-                <Progress value={(elapsed / MAX_RECORDING_SECONDS) * 100} className="h-2 rounded-full mb-2" />
+                <div className="text-xs text-muted-foreground mb-2 text-center">Input level</div>
                 <Progress value={Math.min(100, Math.max(0, Math.round(meterLevel * 100)))} className="h-2 rounded-full" />
               </div>
             </div>

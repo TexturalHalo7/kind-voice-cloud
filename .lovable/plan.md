@@ -1,61 +1,43 @@
-# Phased build plan
+## Premium Tier — $4/month or $27 lifetime
 
-Shipping in 4 phases so you can review each before the next. All existing categories/report reasons are replaced with the new spec. No AI moderation — trust is rating + report driven.
+### What unlocks with Premium
+1. **Background sounds** in the Message Player (rain, ocean, brown noise, etc.)
+2. **Favorites** — saving messages to the Favorites page
+3. **Premium avatars** — a new pack of fancier avatars (gradient backgrounds, animated emoji set) added alongside the free 20
 
----
+### Pricing
+- **$4 / month** recurring subscription (Stripe Checkout, `mode: subscription`)
+- **$27 one-off** lifetime unlock (Stripe Checkout, `mode: payment`)
 
-## Phase 1 — Recording flow + rating (this turn)
+### Backend (Stripe + Cloud)
+- New `subscribers` table: `user_id`, `email`, `stripe_customer_id`, `subscribed bool`, `lifetime bool`, `subscription_end`, `updated_at`. RLS: user can read own row only; edge functions write via service role.
+- Stripe products created via tool: "Voices Premium Monthly" ($4/mo) and "Voices Lifetime" ($27 one-off).
+- Edge functions (all `verify_jwt = false`, validate JWT in code):
+  - `create-checkout` — creates Stripe subscription Checkout session
+  - `create-lifetime-payment` — creates one-off Checkout session
+  - `check-subscription` — looks up Stripe subscriptions + checks `lifetime` flag, upserts `subscribers` row, returns `{ premium: bool, plan: 'monthly'|'lifetime'|null, subscription_end }`
+  - `customer-portal` — opens Stripe billing portal for subscription management
+- Stripe key already present (`STRIPE_SECRET_KEY`).
 
-**Categories (replace existing 4)**
-Card grid on the recorder — must be selected before mic unlocks:
+### Frontend
+- **`usePremium()` hook**: calls `check-subscription` on mount/auth change, exposes `{ premium, plan, loading, refresh }`.
+- **`/pricing` page**: two cards (Monthly / Lifetime), buttons invoke respective edge function and open Stripe Checkout in new tab.
+- **`/premium-success` page**: thanks user, auto-calls refresh.
+- **Header**: small "Upgrade" button when not premium; small ✨ Premium badge when premium. Link to manage subscription (portal) for monthly subscribers.
+- **Background music** (`MessagePlayer`): if not premium, show controls disabled with a lock + "Unlock with Premium" link.
+- **Favorites**:
+  - Heart/save button on messages: if not premium, clicking opens an upgrade dialog instead of saving.
+  - `/favorites` page: if not premium, replace list with upgrade card.
+- **Premium avatars**:
+  - Extend `src/lib/avatars.ts` with `PREMIUM_AVATARS` (10–12 new ones, distinct gradient backgrounds + richer emoji set) and a `premium: boolean` flag on each avatar.
+  - `getAvatar()` continues to resolve any id; non-premium users selecting a premium id is prevented in the picker (locked overlay + tooltip).
+  - Profile page picker shows two sections: Free / Premium (locked unless `premium`).
 
-- ❤️ Appreciated — "Tell someone why they are valued and appreciated."
-- 💪 Encouragement — "Leave a comforting message that could help someone having a difficult day."
-- 🎉 Congratulate — "Celebrate someone's achievement with genuine happiness."
-- 🙏 Thank you — "Express sincere gratitude to someone who made a difference."
-- 🌟 You matter — "Remind someone that their life has value and that they are important."
+### Memory updates
+- Remove the "100% free / no Stripe" core rule.
+- Add new memory entries: `premium-tier` (pricing, what unlocks), `premium-avatars`.
 
-Kindness reminder banner shown above mic after category picked. Recording capped at **30 seconds** (auto-stop + visible countdown).
-
-**Rating (replaces "Thank You" button on the player)**
-After audio `ended`, show 4 large buttons: ❤️ Made my day / 😊 Nice / 😐 Neutral / 🚩 Inappropriate. Listener must rate before "Hear Another" unlocks. One rating per listener per message (unique constraint). Self-messages can't be rated.
-
-**DB (Phase 1 migration)**
-- `voice_messages.category` values migrated: `general→you-matter`, `encouragement→encouragement`, `gratitude→thank-you`, `motivation→congratulate`. New value `appreciated` added.
-- New `public.message_ratings` (message_id, listener_id, sender_id, rating enum, created_at; unique on message+listener) with RLS + GRANTs.
-- Update `get_random_voice_messages` to accept new category values.
-
----
-
-## Phase 2 — Reports + auto-hide + reputation
-
-- Replace reasons in report dialog with: Bullying/harassment, Hate speech, Threats/violence, Sexual/inappropriate, Spam, Other. Confirmation step before submit. One report per user per message (already enforced).
-- New `public.sender_reputation` (user_id PK, score int, hidden_until, suspended_until, updated_at).
-- DB trigger on `message_ratings` insert: ❤️=+3, 😊=+1, 😐=0, 🚩=−5 to sender score. Never exposed to clients.
-- DB trigger on `voice_message_reports` insert: −2 to sender score; when a message hits **3 distinct reporters**, set `voice_messages.is_hidden=true` (new column, defaults false). Public RPC excludes hidden.
-- Suspension: 5 distinct reports in 30 days OR score < −20 → set `suspended_until = now()+7 days`. `AudioRecorder` blocks upload while suspended with reason toast + notification row.
-- Anti-abuse: rate-limit reports to 10/day per user via trigger; self-rating/self-report blocked in RLS.
-
----
-
-## Phase 3 — Admin roles + dashboard
-
-- New `public.app_role` enum (`admin`, `moderator`, `user`), `public.user_roles` table, `has_role(uuid, app_role)` SECURITY DEFINER function (per project rules). You promote yourself via a one-off insert I'll walk through.
-- `/admin` route, gated by `has_role`. Stats cards: total messages, messages today, rating breakdown, reports today, auto-hidden count, suspended users, top-rated senders, most-reported senders, popular categories.
-
----
-
-## Phase 4 — Moderation queue
-
-- `/admin/queue` lists hidden messages with audio player, report count, reasons list.
-- Actions (admin-only RPCs): Approve (unhide + clear reports flag), Keep hidden, Delete permanently (removes storage file + row), Suspend sender (extend), Unsuspend sender.
-
----
-
-## Notes / open items
-
-- **Transcription**: spec mentions "View transcription (if available)" in the queue. Per your answer, no AI this round — queue will show category + reasons only; transcription can be added later.
-- **Existing data**: current messages get remapped categories (see Phase 1). Existing `message_thanks` stays as-is; the new rating system is separate.
-- **Memory conflict**: no changes needed — the "no AI moderation" rule stays in place. I'll add a new memory documenting the rating/reputation thresholds after Phase 2 lands.
-
-Reply "go" to start Phase 1, or tell me what to tweak.
+### Technical notes
+- Subscription verification approach matches Lovable's standard: query Stripe by email each time `check-subscription` runs, plus an OR check on the `lifetime` column in `subscribers` (set by `create-lifetime-payment` after a successful Checkout via `verify-payment` style follow-up — implemented inside `check-subscription` by listing the user's recent paid Checkout Sessions for the lifetime price).
+- All paywalled UI keeps existing components functional for premium users; only the gating layer is added.
+- Rule-of-thumb: never trust client `premium` flag for actions that mutate data — `favorites` insert remains protected by the upgrade-dialog UX (no server-side enforcement needed since favorites table already has RLS by `user_id`; users could bypass UI but that's acceptable for this app's scope). If you want strict enforcement, say so and I'll add a `has_premium(uuid)` SQL function + tighten the favorites INSERT policy.

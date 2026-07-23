@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Play, RefreshCw, Sparkles, Heart, Filter } from "lucide-react";
+import { Play, RefreshCw, Sparkles, Heart, ThumbsUp, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import StartConversationButton from "./StartConversationButton";
@@ -14,34 +14,7 @@ interface MessagePlayerProps {
   userId?: string;
 }
 
-type MessageCategory =
-  | "all"
-  | "appreciated"
-  | "encouragement"
-  | "congratulate"
-  | "thank-you"
-  | "you-matter";
-
-type RatingValue = "made_my_day" | "nice" | "neutral" | "inappropriate";
-
-const RATING_OPTIONS: { value: RatingValue; emoji: string; label: string; color: string }[] = [
-  { value: "made_my_day",  emoji: "❤️", label: "Made my day", color: "bg-red-100 text-red-700 hover:bg-red-200 border-red-200" },
-  { value: "nice",         emoji: "😊", label: "Nice",         color: "bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200" },
-  { value: "neutral",      emoji: "😐", label: "Neutral",      color: "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200" },
-  { value: "inappropriate",emoji: "🚩", label: "Inappropriate",color: "bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/30" },
-];
-
-const CATEGORY_LABELS: Record<string, string> = {
-  appreciated: "Appreciated",
-  encouragement: "Encouragement",
-  congratulate: "Congratulate",
-  "thank-you": "Thank you",
-  "you-matter": "You matter",
-  // legacy fallbacks (in case any old rows sneak through)
-  general: "You matter",
-  gratitude: "Thank you",
-  motivation: "Congratulate",
-};
+type MessageCategory = "all" | "general" | "encouragement" | "gratitude" | "motivation";
 
 const MessagePlayer = ({ userId }: MessagePlayerProps) => {
   const { premium } = usePremium();
@@ -52,12 +25,11 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
   const [messageId, setMessageId] = useState<string | null>(null);
   const [messageOwnerId, setMessageOwnerId] = useState<string | null>(null);
   const [category, setCategory] = useState<string>("all");
-  const [messageCategory, setMessageCategory] = useState<string>("you-matter");
+  const [messageCategory, setMessageCategory] = useState<string>("general");
+  const [thanksCount, setThanksCount] = useState(0);
+  const [hasThanked, setHasThanked] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [filterCategory, setFilterCategory] = useState<MessageCategory>("all");
-  const [hasFinishedListening, setHasFinishedListening] = useState(false);
-  const [rating, setRating] = useState<RatingValue | null>(null);
-  const [submittingRating, setSubmittingRating] = useState(false);
   const FREE_FAVORITE_LIMIT = 5;
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -77,6 +49,7 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
   useEffect(() => {
     if (messageId && userId) {
       checkIfFavorited();
+      checkIfThanked();
     }
   }, [messageId, userId]);
 
@@ -93,6 +66,19 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
     setIsFavorited(!!data);
   };
 
+  const checkIfThanked = async () => {
+    if (!messageId || !userId) return;
+    
+    const { data } = await supabase
+      .from("message_thanks")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("voice_message_id", messageId)
+      .maybeSingle();
+    
+    setHasThanked(!!data);
+  };
+
   const fetchMessage = async () => {
     // Stop and clear current audio before loading a new message
     if (audioRef.current) {
@@ -102,9 +88,8 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
     }
     setAudioUrl(null);
     setLoading(true);
+    setHasThanked(false);
     setIsFavorited(false);
-    setHasFinishedListening(false);
-    setRating(null);
 
     try {
       // Use secure function to get voice messages
@@ -134,7 +119,8 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
       setUsername(selectedMessage.username || "Anonymous");
       setMessageId(selectedMessage.id);
       setMessageOwnerId(selectedMessage.user_id);
-      setMessageCategory(selectedMessage.category || "you-matter");
+      setMessageCategory(selectedMessage.category || "general");
+      setThanksCount(selectedMessage.thanks_count || 0);
       try {
         const key = "listened_count";
         const current = parseInt(localStorage.getItem(key) || "0", 10) || 0;
@@ -189,40 +175,46 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
     }
   };
 
-  const submitRating = async (value: RatingValue) => {
-    if (!messageId || !messageOwnerId || !userId || rating || submittingRating) return;
-    setSubmittingRating(true);
-    const { error } = await supabase.from("message_ratings").insert({
-      voice_message_id: messageId,
-      listener_id: userId,
-      sender_id: messageOwnerId,
-      rating: value,
-    });
-    setSubmittingRating(false);
-    if (error) {
-      if (error.code === "23505") {
-        setRating(value);
-        toast.info("You've already rated this message");
-        return;
-      }
-      toast.error("Failed to submit rating");
+  const handleThankYou = async () => {
+    if (!messageId || !userId) {
+      toast.error("Please log in to send thanks");
       return;
     }
-    setRating(value);
-    toast.success("Thanks for rating 💛");
-  };
 
-  const canRate = !!(userId && messageOwnerId && userId !== messageOwnerId);
-  const ratingRequired = canRate && hasFinishedListening && !rating;
+    if (hasThanked) {
+      toast.info("You've already thanked this message");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("message_thanks")
+        .insert({ user_id: userId, voice_message_id: messageId });
+
+      if (error) {
+        if (error.code === "23505") {
+          toast.info("You've already thanked this message");
+          setHasThanked(true);
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      setHasThanked(true);
+      setThanksCount((prev) => prev + 1);
+      toast.success("Thank you sent! 🙏");
+    } catch (error: any) {
+      toast.error("Failed to send thanks");
+    }
+  };
 
   const getCategoryColor = (cat: string) => {
     switch (cat) {
       case "encouragement": return "bg-blue-500/20 text-blue-700";
-      case "thank-you": return "bg-green-500/20 text-green-700";
-      case "congratulate": return "bg-orange-500/20 text-orange-700";
-      case "appreciated": return "bg-pink-500/20 text-pink-700";
-      case "you-matter": return "bg-purple-500/20 text-purple-700";
-      default: return "bg-slate-500/20 text-slate-700";
+      case "gratitude": return "bg-green-500/20 text-green-700";
+      case "motivation": return "bg-orange-500/20 text-orange-700";
+      default: return "bg-purple-500/20 text-purple-700";
     }
   };
 
@@ -252,11 +244,10 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
             </SelectTrigger>
             <SelectContent className="bg-background z-50">
               <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="appreciated">Appreciated</SelectItem>
+              <SelectItem value="general">General Positivity</SelectItem>
               <SelectItem value="encouragement">Encouragement</SelectItem>
-              <SelectItem value="congratulate">Congratulate</SelectItem>
-              <SelectItem value="thank-you">Thank you</SelectItem>
-              <SelectItem value="you-matter">You matter</SelectItem>
+              <SelectItem value="gratitude">Gratitude</SelectItem>
+              <SelectItem value="motivation">Motivation</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -292,7 +283,7 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getCategoryColor(messageCategory)}`}>
-                          {CATEGORY_LABELS[messageCategory] || messageCategory}
+                          {messageCategory.charAt(0).toUpperCase() + messageCategory.slice(1)}
                         </span>
                       </div>
                       <p className="text-lg font-semibold text-foreground truncate">{username}</p>
@@ -318,7 +309,6 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
                           a.volume = 1;
                         }
                       }}
-                      onEnded={() => setHasFinishedListening(true)}
                       onError={() =>
                         toast.error(
                           "Playback failed. Your browser may not support this audio format. Try a different browser."
@@ -327,43 +317,6 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
                     />
                   </div>
                   
-                  {/* Rating (required after listening) */}
-                  {canRate && (
-                    <div className="mt-4 rounded-xl border border-border/50 bg-background/60 p-3">
-                      <div className="text-sm font-medium text-center mb-3">
-                        {rating
-                          ? "Thanks for your rating 💛"
-                          : hasFinishedListening
-                          ? "How did this message feel? (required to hear another)"
-                          : "Listen to the end, then rate it"}
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {RATING_OPTIONS.map((opt) => {
-                          const isSelected = rating === opt.value;
-                          const disabled = !hasFinishedListening || !!rating || submittingRating;
-                          return (
-                            <button
-                              key={opt.value}
-                              type="button"
-                              onClick={() => submitRating(opt.value)}
-                              disabled={disabled}
-                              className={`rounded-2xl border-2 p-3 text-center transition-all duration-200 ${
-                                isSelected
-                                  ? `${opt.color} border-current scale-[1.02]`
-                                  : disabled
-                                  ? "border-border bg-muted/40 text-muted-foreground opacity-60 cursor-not-allowed"
-                                  : `${opt.color} hover:scale-[1.02]`
-                              }`}
-                            >
-                              <div className="text-2xl leading-none mb-1">{opt.emoji}</div>
-                              <div className="text-xs font-medium">{opt.label}</div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
                   {/* Action Buttons */}
                   <div className="flex items-center justify-center gap-3 mt-4 flex-wrap">
                     <Button
@@ -374,6 +327,16 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
                     >
                       <Heart className={`w-4 h-4 mr-1.5 ${isFavorited ? "fill-current" : ""}`} />
                       {isFavorited ? "Saved" : "Save"}
+                    </Button>
+                    <Button
+                      onClick={handleThankYou}
+                      variant="ghost"
+                      size="sm"
+                      disabled={hasThanked}
+                      className={`rounded-full px-4 transition-all duration-300 ${hasThanked ? "bg-green-100 text-green-600" : "hover:bg-accent/10"}`}
+                    >
+                      <ThumbsUp className={`w-4 h-4 mr-1.5 ${hasThanked ? "fill-current" : ""}`} />
+                      Thank You {thanksCount > 0 && `(${thanksCount})`}
                     </Button>
                     {userId && messageOwnerId && userId !== messageOwnerId && (
                       <StartConversationButton
@@ -395,12 +358,11 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
 
               <Button
                 onClick={fetchMessage}
-                disabled={loading || ratingRequired}
+                disabled={loading}
                 className="w-full rounded-xl bg-gradient-to-r from-accent via-secondary to-accent hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
-                title={ratingRequired ? "Please rate this message first" : undefined}
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-                {ratingRequired ? "Rate to continue" : "Hear Another Message"}
+                Hear Another Message
               </Button>
             </div>
           )}
