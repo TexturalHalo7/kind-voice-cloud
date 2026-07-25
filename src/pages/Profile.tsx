@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, Flame, Heart, MessageCircle, Save, Star, User as UserIcon, ThumbsUp, Sparkles, Lock, CreditCard } from "lucide-react";
+import { ArrowLeft, Calendar, Flame, Heart, MessageCircle, Save, User as UserIcon, ThumbsUp, Sparkles, Lock, CreditCard } from "lucide-react";
 import { format } from "date-fns";
 import { AVATARS, PREMIUM_AVATARS, isPremiumAvatar } from "@/lib/avatars";
 import UserAvatar from "@/components/UserAvatar";
@@ -85,18 +85,6 @@ const Profile = () => {
     }
   };
 
-  const getBadge = (count: number) => {
-    if (count >= 250) {
-      return { stars: 1, color: "text-yellow-400", label: "Gold Star", next: null };
-    } else if (count >= 100) {
-      return { stars: 2, color: "text-white", label: "2 White Stars", next: { count: 250, label: "Gold Star" } };
-    } else if (count >= 50) {
-      return { stars: 1, color: "text-white", label: "1 White Star", next: { count: 100, label: "2 White Stars" } };
-    }
-    return { stars: 0, color: "", label: "No badge yet", next: { count: 50, label: "1 White Star" } };
-  };
-
-  const badge = getBadge(profile?.message_count || 0);
 
   if (loading) {
     return (
@@ -264,40 +252,6 @@ const Profile = () => {
           </CardContent>
         </Card>
 
-        {/* Badge Card */}
-        <Card className="shadow-glow bg-white/95 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Star className="w-5 h-5 text-yellow-500" />
-              Your Badge
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {badge.stars > 0 ? (
-                  <div className="flex gap-1">
-                    {Array.from({ length: badge.stars }).map((_, i) => (
-                      <Star key={i} className={`w-8 h-8 ${badge.color}`} fill="currentColor" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                    <Star className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                )}
-                <div>
-                  <p className="font-semibold">{badge.label}</p>
-                  {badge.next && (
-                    <p className="text-sm text-muted-foreground">
-                      {badge.next.count - (profile?.message_count || 0)} more messages for {badge.next.label}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* My Voice Messages */}
         {user && <MyVoiceMessages userId={user.id} />}
