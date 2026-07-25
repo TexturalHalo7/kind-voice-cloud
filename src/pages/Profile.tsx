@@ -85,18 +85,6 @@ const Profile = () => {
     }
   };
 
-  const getBadge = (count: number) => {
-    if (count >= 250) {
-      return { stars: 1, color: "text-yellow-400", label: "Gold Star", next: null };
-    } else if (count >= 100) {
-      return { stars: 2, color: "text-white", label: "2 White Stars", next: { count: 250, label: "Gold Star" } };
-    } else if (count >= 50) {
-      return { stars: 1, color: "text-white", label: "1 White Star", next: { count: 100, label: "2 White Stars" } };
-    }
-    return { stars: 0, color: "", label: "No badge yet", next: { count: 50, label: "1 White Star" } };
-  };
-
-  const badge = getBadge(profile?.message_count || 0);
 
   if (loading) {
     return (
