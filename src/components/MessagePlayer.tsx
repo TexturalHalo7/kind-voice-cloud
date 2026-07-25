@@ -7,8 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import StartConversationButton from "./StartConversationButton";
 import ReportMessageDialog from "./ReportMessageDialog";
-import UpgradeDialog from "./UpgradeDialog";
-import { usePremium } from "@/hooks/usePremium";
 
 interface MessagePlayerProps {
   userId?: string;
@@ -17,8 +15,6 @@ interface MessagePlayerProps {
 type MessageCategory = "all" | "general" | "encouragement" | "gratitude" | "motivation";
 
 const MessagePlayer = ({ userId }: MessagePlayerProps) => {
-  const { premium } = usePremium();
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState<string>("");
@@ -30,7 +26,6 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
   const [hasThanked, setHasThanked] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [filterCategory, setFilterCategory] = useState<MessageCategory>("all");
-  const FREE_FAVORITE_LIMIT = 5;
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -139,20 +134,6 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
       toast.error("Please log in to save favorites");
       return;
     }
-    if (!premium && !isFavorited) {
-      const { count, error: countError } = await supabase
-        .from("favorites")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId);
-      if (countError) {
-        toast.error("Failed to check favorites limit");
-        return;
-      }
-      if ((count ?? 0) >= FREE_FAVORITE_LIMIT) {
-        setUpgradeOpen(true);
-        return;
-      }
-    }
 
     try {
       if (isFavorited) {
@@ -220,7 +201,6 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
 
   return (
     <>
-    <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="You've reached the free limit of 5 saved favorites. Unlimited favorites" />
     <Card className="shadow-glow bg-white/95 backdrop-blur-sm animate-in fade-in slide-in-from-right duration-700">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">

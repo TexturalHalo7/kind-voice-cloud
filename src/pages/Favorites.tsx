@@ -4,8 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Heart, Trash2, Sparkles } from "lucide-react";
-import { usePremium } from "@/hooks/usePremium";
+import { ArrowLeft, Heart, Trash2 } from "lucide-react";
 
 interface FavoriteMessage {
   id: string;
@@ -23,7 +22,6 @@ interface FavoriteMessage {
 
 const Favorites = () => {
   const navigate = useNavigate();
-  const { premium, loading: premiumLoading } = usePremium();
   const [favorites, setFavorites] = useState<FavoriteMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -137,21 +135,6 @@ const Favorites = () => {
       </header>
 
       <main className="container mx-auto px-4 py-12 max-w-3xl">
-        {!premiumLoading && !premium && (
-          <Card className="shadow-glow bg-white/95 backdrop-blur-sm mb-4">
-            <CardContent className="py-4 flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-3">
-                <Sparkles className="w-5 h-5 text-primary" />
-                <p className="text-sm text-muted-foreground">
-                  Free plan: {favorites.length}/5 favorites saved. Upgrade for unlimited.
-                </p>
-              </div>
-              <Button onClick={() => navigate("/pricing")} size="sm" className="bg-primary rounded-full">
-                See plans
-              </Button>
-            </CardContent>
-          </Card>
-        )}
         {favorites.length === 0 ? (
           <Card className="shadow-glow bg-white/95 backdrop-blur-sm">
             <CardContent className="py-12 text-center">
