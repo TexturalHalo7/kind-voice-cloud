@@ -119,6 +119,41 @@ export type Database = {
           },
         ]
       }
+      message_ratings: {
+        Row: {
+          created_at: string
+          id: string
+          listener_id: string
+          rating: Database["public"]["Enums"]["message_rating"]
+          sender_id: string
+          voice_message_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listener_id: string
+          rating: Database["public"]["Enums"]["message_rating"]
+          sender_id: string
+          voice_message_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listener_id?: string
+          rating?: Database["public"]["Enums"]["message_rating"]
+          sender_id?: string
+          voice_message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_ratings_voice_message_id_fkey"
+            columns: ["voice_message_id"]
+            isOneToOne: false
+            referencedRelation: "voice_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_thanks: {
         Row: {
           created_at: string
@@ -409,7 +444,7 @@ export type Database = {
       reset_monthly_message_counts: { Args: never; Returns: undefined }
     }
     Enums: {
-      [_ in never]: never
+      message_rating: "made_my_day" | "nice" | "neutral" | "inappropriate"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -536,6 +571,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      message_rating: ["made_my_day", "nice", "neutral", "inappropriate"],
+    },
   },
 } as const
