@@ -264,40 +264,6 @@ const Profile = () => {
           </CardContent>
         </Card>
 
-        {/* Badge Card */}
-        <Card className="shadow-glow bg-white/95 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Star className="w-5 h-5 text-yellow-500" />
-              Your Badge
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {badge.stars > 0 ? (
-                  <div className="flex gap-1">
-                    {Array.from({ length: badge.stars }).map((_, i) => (
-                      <Star key={i} className={`w-8 h-8 ${badge.color}`} fill="currentColor" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                    <Star className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                )}
-                <div>
-                  <p className="font-semibold">{badge.label}</p>
-                  {badge.next && (
-                    <p className="text-sm text-muted-foreground">
-                      {badge.next.count - (profile?.message_count || 0)} more messages for {badge.next.label}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* My Voice Messages */}
         {user && <MyVoiceMessages userId={user.id} />}
