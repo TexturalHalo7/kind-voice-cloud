@@ -107,15 +107,15 @@ const Index = () => {
 
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-20 text-center">
-        <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-12 shadow-glow max-w-3xl mx-auto space-y-6">
-          <h2 className="text-4xl font-bold">Ready to Spread Kindness?</h2>
-          <p className="text-lg text-muted-foreground">
+        <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-6 md:p-12 shadow-glow max-w-3xl mx-auto space-y-6">
+          <h2 className="text-3xl md:text-4xl font-bold">Ready to Spread Kindness?</h2>
+          <p className="text-base md:text-lg text-muted-foreground">
             Join thousands of people making the world a little brighter, one voice message at a time.
           </p>
           <Button
             onClick={() => navigate("/auth?mode=signup")}
             size="lg"
-            className="bg-gradient-warm hover:opacity-90 shadow-soft rounded-full px-12 h-14 text-lg font-semibold"
+            className="bg-gradient-warm hover:opacity-90 shadow-soft rounded-full px-6 md:px-12 h-12 md:h-14 text-base md:text-lg font-semibold w-full sm:w-auto"
           >
             Start Sharing Joy Today
           </Button>
