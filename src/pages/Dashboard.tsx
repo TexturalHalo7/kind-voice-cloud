@@ -169,22 +169,6 @@ const Dashboard = () => {
             
             {user && <NotificationBell userId={user.id} />}
 
-            {!premium ? (
-              <Button
-                onClick={() => navigate("/pricing")}
-                size="sm"
-                className="rounded-full bg-primary"
-              >
-                <Sparkles className="w-4 h-4 mr-1" />
-                Upgrade
-              </Button>
-            ) : (
-              <div className="flex items-center gap-1 bg-primary/20 text-white px-3 py-1 rounded-full text-xs font-semibold" title="Premium member">
-                <Sparkles className="w-3 h-3" />
-                Premium
-              </div>
-            )}
-            
             <Button
               onClick={() => navigate("/favorites")}
               variant="ghost"
@@ -259,15 +243,6 @@ const Dashboard = () => {
                 <DropdownMenuItem onClick={() => navigate("/conversations")}>
                   <MessageCircle className="w-4 h-4 mr-2" /> Messages
                 </DropdownMenuItem>
-                {!premium ? (
-                  <DropdownMenuItem onClick={() => navigate("/pricing")}>
-                    <Sparkles className="w-4 h-4 mr-2" /> Upgrade
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem disabled>
-                    <Sparkles className="w-4 h-4 mr-2" /> Premium
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="w-4 h-4 mr-2" /> Logout

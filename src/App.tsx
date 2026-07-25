@@ -11,10 +11,7 @@ import Favorites from "./pages/Favorites";
 import Conversations from "./pages/Conversations";
 import About from "./pages/About";
 import ResetPassword from "./pages/ResetPassword";
-import Pricing from "./pages/Pricing";
-import PremiumSuccess from "./pages/PremiumSuccess";
 import NotFound from "./pages/NotFound";
-import { PremiumProvider } from "./hooks/usePremium";
 
 const queryClient = new QueryClient();
 
@@ -24,7 +21,6 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <PremiumProvider>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
@@ -34,12 +30,9 @@ const App = () => (
           <Route path="/conversations" element={<Conversations />} />
           <Route path="/about" element={<About />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/premium-success" element={<PremiumSuccess />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-        </PremiumProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
