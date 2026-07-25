@@ -150,7 +150,7 @@ const Achievements = ({ profile }: { profile: any }) => {
                       {current ? `${current} tier` : "Not yet unlocked"}
                     </p>
                   </div>
-                  <div className="grid grid-cols-4 gap-1.5 max-w-[280px]">
+                  <div className="grid grid-cols-4 gap-2 w-full">
                     {a.tiers.map((threshold, i) => {
                       const tierName = TIER_NAMES[i];
                       const unlocked = value >= threshold;
