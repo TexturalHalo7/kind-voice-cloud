@@ -21,6 +21,7 @@ const Conversations = () => {
   const [searchParams] = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
     searchParams.get("id")
   );
@@ -91,7 +92,7 @@ const Conversations = () => {
             <h1 className="text-2xl font-bold text-white">Messages</h1>
           </div>
           <div className="flex items-center gap-4">
-            <Dialog>
+            <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
               <DialogTrigger asChild>
                 <Button
                   variant="ghost"
@@ -105,7 +106,10 @@ const Conversations = () => {
                 <DialogHeader>
                   <DialogTitle>Search Users</DialogTitle>
                 </DialogHeader>
-                <UserSearch currentUserId={user?.id || ""} />
+                <UserSearch
+                  currentUserId={user?.id || ""}
+                  onConversationStarted={() => setSearchOpen(false)}
+                />
               </DialogContent>
             </Dialog>
             <Button
