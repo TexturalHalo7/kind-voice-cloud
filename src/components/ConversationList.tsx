@@ -132,33 +132,43 @@ const ConversationList = ({
     if (selectedConversationId) fetchConversations();
   }, [selectedConversationId]);
 
+  const header = (
+    <div className="px-4 py-3 border-b border-border bg-background">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        Recent
+      </h2>
+    </div>
+  );
+
   if (loading) {
     return (
-      <div className="p-4 text-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      <div>
+        {header}
+        <div className="p-4 text-center">
+          <div className="animate-pulse text-muted-foreground">Loading...</div>
+        </div>
       </div>
     );
   }
 
   if (conversations.length === 0) {
     return (
-      <div className="p-6 text-center">
-        <MessageCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-        <p className="text-muted-foreground text-sm">No conversations yet</p>
-        <p className="text-muted-foreground/70 text-xs mt-1">
-          Start a conversation by replying to a voice message
-        </p>
+      <div>
+        {header}
+        <div className="p-6 text-center">
+          <MessageCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">No conversations yet</p>
+          <p className="text-muted-foreground/70 text-xs mt-1">
+            Start a conversation by replying to a voice message
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <ScrollArea className="h-[600px]">
-      <div className="px-4 py-3 border-b border-border sticky top-0 bg-background/95 backdrop-blur-sm">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Recent
-        </h2>
-      </div>
+      {header}
       <div className="divide-y divide-border">
         {conversations.map((conversation) => (
           <button
