@@ -25,6 +25,12 @@ const Conversations = () => {
     searchParams.get("id")
   );
 
+  // Sync selected conversation when URL query changes (e.g., navigating from user search)
+  useEffect(() => {
+    const id = searchParams.get("id");
+    if (id) setSelectedConversationId(id);
+  }, [searchParams]);
+
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
