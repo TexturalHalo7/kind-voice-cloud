@@ -107,19 +107,18 @@ const ConversationList = ({
   useEffect(() => {
     fetchConversations();
 
-    // Subscribe to new messages to update the list
+    // Subscribe to new messages and new conversations to update the list
     const channel = supabase
       .channel("conversation_updates")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "conversation_messages",
-        },
-        () => {
-          fetchConversations();
-        }
+        { event: "*", schema: "public", table: "conversation_messages" },
+        () => fetchConversations()
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "conversations" },
+        () => fetchConversations()
       )
       .subscribe();
 
@@ -127,6 +126,11 @@ const ConversationList = ({
       supabase.removeChannel(channel);
     };
   }, [userId]);
+
+  // Refetch when the selected conversation changes (e.g. new one started from user search)
+  useEffect(() => {
+    if (selectedConversationId) fetchConversations();
+  }, [selectedConversationId]);
 
   if (loading) {
     return (
@@ -150,6 +154,11 @@ const ConversationList = ({
 
   return (
     <ScrollArea className="h-[600px]">
+      <div className="px-4 py-3 border-b border-border sticky top-0 bg-background/95 backdrop-blur-sm">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          Recent
+        </h2>
+      </div>
       <div className="divide-y divide-border">
         {conversations.map((conversation) => (
           <button
