@@ -9,12 +9,9 @@ const GlobalCounter = () => {
 
   useEffect(() => {
     const fetchTotal = async () => {
-      const { count, error } = await supabase
-        .from("voice_messages")
-        .select("*", { count: "exact", head: true });
-
-      if (!error && count !== null) {
-        setTotalMessages(count);
+      const { data, error } = await supabase.rpc("get_total_voice_message_count");
+      if (!error && data !== null) {
+        setTotalMessages(data as number);
       }
       setLoading(false);
     };

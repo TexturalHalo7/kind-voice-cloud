@@ -441,6 +441,7 @@ export type Database = {
           username: string
         }[]
       }
+      get_total_voice_message_count: { Args: never; Returns: number }
       reset_monthly_message_counts: { Args: never; Returns: undefined }
     }
     Enums: {
