@@ -16,9 +16,10 @@ interface SearchResult {
 
 interface UserSearchProps {
   currentUserId: string;
+  onConversationStarted?: () => void;
 }
 
-const UserSearch = ({ currentUserId }: UserSearchProps) => {
+const UserSearch = ({ currentUserId, onConversationStarted }: UserSearchProps) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -77,6 +78,7 @@ const UserSearch = ({ currentUserId }: UserSearchProps) => {
         .maybeSingle();
 
       if (existingConversation) {
+        onConversationStarted?.();
         navigate(`/conversations?id=${existingConversation.id}`);
         return;
       }
@@ -94,6 +96,7 @@ const UserSearch = ({ currentUserId }: UserSearchProps) => {
       if (error) throw error;
 
       toast.success("Conversation started!");
+      onConversationStarted?.();
       navigate(`/conversations?id=${newConversation.id}`);
     } catch (error) {
       console.error("Error starting conversation:", error);
