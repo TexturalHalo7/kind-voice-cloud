@@ -33,7 +33,8 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const rafIdRef = useRef<number | null>(null);
-  const [meterLevel, setMeterLevel] = useState(0);
+  const [visualizerData, setVisualizerData] = useState<number[]>([]);
+
 
   const startRecording = async () => {
     try {
@@ -67,18 +68,19 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
       analyserRef.current = analyser;
       source.connect(analyser);
       const data = new Uint8Array(analyser.frequencyBinCount);
+      const barCount = 16;
       const loop = () => {
-        analyser.getByteTimeDomainData(data);
-        let sum = 0;
-        for (let i = 0; i < data.length; i++) {
-          const v = (data[i] - 128) / 128;
-          sum += v * v;
+        analyser.getByteFrequencyData(data);
+        const step = Math.floor(data.length / barCount);
+        const values: number[] = [];
+        for (let i = 0; i < barCount; i++) {
+          let sum = 0;
+          for (let j = 0; j < step; j++) {
+            sum += data[i * step + j];
+          }
+          values.push(step ? Math.floor(sum / step) : 0);
         }
-        const rms = Math.sqrt(sum / data.length);
-        setMeterLevel(rms);
-        
-        
-        
+        setVisualizerData(values);
         rafIdRef.current = requestAnimationFrame(loop);
       };
       loop();
