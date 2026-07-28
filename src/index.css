@@ -62,3 +62,44 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .animate-wave-1 {
+    animation: wave-1 1.2s ease-in-out infinite;
+  }
+  .animate-wave-2 {
+    animation: wave-2 1.4s ease-in-out infinite;
+    animation-delay: 0.15s;
+  }
+  .animate-wave-3 {
+    animation: wave-3 1.6s ease-in-out infinite;
+    animation-delay: 0.3s;
+  }
+  .animate-wave-4 {
+    animation: wave-4 1.8s ease-in-out infinite;
+    animation-delay: 0.45s;
+  }
+}
+
+@keyframes wave-1 {
+  0%, 100% { transform: scaleY(0.15); }
+  50% { transform: scaleY(0.85); }
+}
+
+@keyframes wave-2 {
+  0%, 100% { transform: scaleY(0.2); }
+  40% { transform: scaleY(0.65); }
+  80% { transform: scaleY(0.45); }
+}
+
+@keyframes wave-3 {
+  0%, 100% { transform: scaleY(0.25); }
+  60% { transform: scaleY(0.75); }
+}
+
+@keyframes wave-4 {
+  0%, 100% { transform: scaleY(0.18); }
+  30% { transform: scaleY(0.55); }
+  70% { transform: scaleY(0.35); }
+}
+
