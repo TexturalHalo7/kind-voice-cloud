@@ -347,7 +347,7 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
               <Button
                 onClick={fetchMessage}
                 disabled={loading}
-                className="w-full rounded-xl bg-gradient-to-r from-accent via-secondary to-accent hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
+                className="w-full rounded-xl bg-secondary hover:bg-secondary/90 shadow-md hover:shadow-glow transition-all duration-300"
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
                 Hear Another Message
