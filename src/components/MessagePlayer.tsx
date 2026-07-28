@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import StartConversationButton from "./StartConversationButton";
 import ReportMessageDialog from "./ReportMessageDialog";
+import AudioWaveform from "./AudioWaveform";
 
 interface MessagePlayerProps {
   userId?: string;
@@ -27,6 +28,7 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [filterCategory, setFilterCategory] = useState<MessageCategory>("all");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     const a = audioRef.current;
@@ -271,6 +273,9 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
                     </div>
                   </div>
                   
+                  {/* Listening waveform */}
+                  <AudioWaveform isPlaying={isPlaying} barCount={16} className="w-full mb-3 text-secondary/80" />
+
                   {/* Audio player */}
                   <div className="bg-background/60 backdrop-blur-sm rounded-xl p-3 border border-border/50">
                     <audio
@@ -288,7 +293,10 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
                           a.muted = false;
                           a.volume = 1;
                         }
+                        setIsPlaying(true);
                       }}
+                      onPause={() => setIsPlaying(false)}
+                      onEnded={() => setIsPlaying(false)}
                       onError={() =>
                         toast.error(
                           "Playback failed. Your browser may not support this audio format. Try a different browser."
@@ -339,7 +347,7 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
               <Button
                 onClick={fetchMessage}
                 disabled={loading}
-                className="w-full rounded-xl bg-gradient-to-r from-accent via-secondary to-accent hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
+                className="w-full rounded-xl bg-secondary hover:bg-secondary/90 shadow-md hover:shadow-glow transition-all duration-300"
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
                 Hear Another Message

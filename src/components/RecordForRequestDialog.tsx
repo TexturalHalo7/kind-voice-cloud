@@ -7,10 +7,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Mic, Square, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import AudioWaveform from "@/components/AudioWaveform";
 
 interface VoiceRequest {
   id: string;
@@ -36,7 +36,7 @@ const RecordForRequestDialog = ({
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [meterLevel, setMeterLevel] = useState(0);
+  const [visualizerData, setVisualizerData] = useState<number[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -55,15 +55,19 @@ const RecordForRequestDialog = ({
       source.connect(analyser);
       
       const data = new Uint8Array(analyser.frequencyBinCount);
+      const barCount = 12;
       const loop = () => {
-        analyser.getByteTimeDomainData(data);
-        let sum = 0;
-        for (let i = 0; i < data.length; i++) {
-          const v = (data[i] - 128) / 128;
-          sum += v * v;
+        analyser.getByteFrequencyData(data);
+        const step = Math.floor(data.length / barCount);
+        const values: number[] = [];
+        for (let i = 0; i < barCount; i++) {
+          let sum = 0;
+          for (let j = 0; j < step; j++) {
+            sum += data[i * step + j];
+          }
+          values.push(step ? Math.floor(sum / step) : 0);
         }
-        const rms = Math.sqrt(sum / data.length);
-        setMeterLevel(rms);
+        setVisualizerData(values);
         rafIdRef.current = requestAnimationFrame(loop);
       };
       loop();
@@ -81,6 +85,7 @@ const RecordForRequestDialog = ({
       mediaRecorder.onstop = () => {
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         setAudioBlob(blob);
+        setVisualizerData([]);
         stream.getTracks().forEach((track) => track.stop());
         if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
         if (audioCtxRef.current) {
@@ -209,7 +214,7 @@ const RecordForRequestDialog = ({
   const handleClose = () => {
     setAudioBlob(null);
     setIsRecording(false);
-    setMeterLevel(0);
+    setVisualizerData([]);
     onOpenChange(false);
   };
 
@@ -242,28 +247,25 @@ const RecordForRequestDialog = ({
           )}
 
           {isRecording && (
-            <div className="flex flex-col items-center gap-4 w-full">
+            <div className="flex flex-col items-center gap-5 w-full">
               <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-destructive/60 animate-ping" />
+                <div className="absolute inset-0 rounded-full bg-destructive/20 blur-xl" />
                 <Button
                   onClick={stopRecording}
                   size="lg"
                   variant="destructive"
-                  className="relative w-24 h-24 rounded-full"
+                  className="relative w-24 h-24 rounded-full hover:scale-105 transition-all duration-300 shadow-lg ring-4 ring-destructive/30 border-4 border-white/20"
                 >
                   <Square className="w-10 h-10" />
                 </Button>
               </div>
-              <div className="w-full">
-                <div className="text-xs text-muted-foreground mb-1 text-center">
-                  Input level
+              <div className="w-full space-y-2">
+                <div className="text-xs text-muted-foreground text-center">
+                  Recording audio
                 </div>
-                <Progress
-                  value={Math.min(100, Math.round(meterLevel * 100))}
-                  className="h-2"
-                />
+                <AudioWaveform data={visualizerData} className="w-full text-primary/80" />
               </div>
-              <p className="text-sm text-destructive animate-pulse">
+              <p className="text-sm text-destructive">
                 Recording... Click stop when done
               </p>
             </div>
