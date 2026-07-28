@@ -122,6 +122,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: finalType });
         setAudioBlob(audioBlob);
+        setVisualizerData([]);
         stream.getTracks().forEach((track) => track.stop());
         if (rafIdRef.current) {
           cancelAnimationFrame(rafIdRef.current);
