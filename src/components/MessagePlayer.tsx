@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Play, RefreshCw, Sparkles, Heart, ThumbsUp, Filter } from "lucide-react";
+import { Play, RefreshCw, Sparkles, Heart, ThumbsUp, Filter, Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import StartConversationButton from "./StartConversationButton";
@@ -29,6 +29,65 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
   const [filterCategory, setFilterCategory] = useState<MessageCategory>("all");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [visualizerData, setVisualizerData] = useState<number[]>([]);
+  const [emptyState, setEmptyState] = useState(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+
+  const setupAnalyser = () => {
+    const a = audioRef.current;
+    if (!a || sourceNodeRef.current) return;
+    try {
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      const ctx: AudioContext = new AudioCtx();
+      audioCtxRef.current = ctx;
+      const src = ctx.createMediaElementSource(a);
+      sourceNodeRef.current = src;
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 128;
+      analyserRef.current = analyser;
+      src.connect(analyser);
+      analyser.connect(ctx.destination);
+    } catch {}
+  };
+
+  const startVisualizer = () => {
+    const analyser = analyserRef.current;
+    if (!analyser) return;
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    const barCount = 16;
+    const loop = () => {
+      analyser.getByteFrequencyData(data);
+      const step = Math.floor(data.length / barCount);
+      const values: number[] = [];
+      for (let i = 0; i < barCount; i++) {
+        let sum = 0;
+        for (let j = 0; j < step; j++) sum += data[i * step + j];
+        values.push(step ? Math.floor(sum / step) : 0);
+      }
+      setVisualizerData(values);
+      rafIdRef.current = requestAnimationFrame(loop);
+    };
+    loop();
+  };
+
+  const stopVisualizer = () => {
+    if (rafIdRef.current) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+  };
+
+  const formatTime = (t: number) => {
+    if (!isFinite(t) || t < 0) t = 0;
+    const m = Math.floor(t / 60);
+    const s = Math.floor(t % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
 
   useEffect(() => {
     const a = audioRef.current;
@@ -98,10 +157,11 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
       if (error) throw error;
 
       if (!messages || messages.length === 0) {
-        toast.error("No messages available in this category. Try another!");
+        setEmptyState(true);
         setLoading(false);
         return;
       }
+      setEmptyState(false);
 
       // Filter out messages from the same person as the current message
       const filteredMessages = messageOwnerId
@@ -118,6 +178,8 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
       setMessageOwnerId(selectedMessage.user_id);
       setMessageCategory(selectedMessage.category || "general");
       setThanksCount(selectedMessage.thanks_count || 0);
+      setCurrentTime(0);
+      setDuration(0);
       try {
         const key = "listened_count";
         const current = parseInt(localStorage.getItem(key) || "0", 10) || 0;
@@ -273,8 +335,21 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
                     </div>
                   </div>
                   
-                  {/* Listening waveform */}
-                  <AudioWaveform isPlaying={isPlaying} barCount={16} className="w-full mb-3 text-secondary/80" />
+                  {/* Listening waveform with time counter */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-xs font-mono tabular-nums text-muted-foreground w-10 text-right">
+                      {formatTime(currentTime)}
+                    </span>
+                    <AudioWaveform
+                      data={isPlaying ? visualizerData : undefined}
+                      isPlaying={isPlaying}
+                      barCount={16}
+                      className="flex-1 text-secondary/80"
+                    />
+                    <span className="text-xs font-mono tabular-nums text-muted-foreground w-10">
+                      {formatTime(duration)}
+                    </span>
+                  </div>
 
                   {/* Audio player */}
                   <div className="bg-background/60 backdrop-blur-sm rounded-xl p-3 border border-border/50">
@@ -293,10 +368,18 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
                           a.muted = false;
                           a.volume = 1;
                         }
+                        setupAnalyser();
+                        if (audioCtxRef.current?.state === "suspended") {
+                          audioCtxRef.current.resume().catch(() => {});
+                        }
                         setIsPlaying(true);
+                        startVisualizer();
                       }}
-                      onPause={() => setIsPlaying(false)}
-                      onEnded={() => setIsPlaying(false)}
+                      onPause={() => { setIsPlaying(false); stopVisualizer(); }}
+                      onEnded={() => { setIsPlaying(false); stopVisualizer(); }}
+                      onTimeUpdate={(e) => setCurrentTime((e.target as HTMLAudioElement).currentTime)}
+                      onLoadedMetadata={(e) => setDuration((e.target as HTMLAudioElement).duration)}
+                      onDurationChange={(e) => setDuration((e.target as HTMLAudioElement).duration)}
                       onError={() =>
                         toast.error(
                           "Playback failed. Your browser may not support this audio format. Try a different browser."
@@ -355,11 +438,25 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
             </div>
           )}
 
+          {emptyState && !audioUrl && !loading && (
+            <div className="w-full text-center space-y-3 py-4 px-2 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/5 border border-accent/20">
+              <div className="text-3xl">💫</div>
+              <p className="text-base font-semibold text-foreground">
+                Be the first voice someone hears today.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                The world is waiting for your first message — record one and brighten someone's day.
+              </p>
+            </div>
+          )}
+
           <p className="text-sm text-muted-foreground text-center">
             {loading
               ? "Finding a message for you..."
               : audioUrl
               ? "Enjoy this moment of positivity"
+              : emptyState
+              ? "No messages here yet. Yours could be the first."
               : "Click to receive a message of encouragement"}
           </p>
         </div>

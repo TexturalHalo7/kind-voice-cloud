@@ -201,26 +201,19 @@ const Profile = () => {
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gradient-warm/10 rounded-xl p-4 text-center">
-                <p className="text-3xl font-bold text-primary">{profile?.message_count || 0}</p>
-                <p className="text-sm text-muted-foreground">Total Messages</p>
+                <p className="text-3xl font-bold text-primary">{profile?.total_thanks_received || 0}</p>
+                <p className="text-sm text-muted-foreground">❤️ Lives Brightened</p>
               </div>
               <div className="bg-gradient-cool/10 rounded-xl p-4 text-center">
-                <p className="text-3xl font-bold text-accent">{profile?.monthly_message_count || 0}</p>
-                <p className="text-sm text-muted-foreground">This Month</p>
+                <p className="text-3xl font-bold text-accent">{profile?.message_count || 0}</p>
+                <p className="text-sm text-muted-foreground">🎤 Messages Shared</p>
               </div>
-              <div className="bg-orange-500/10 rounded-xl p-4 text-center">
+              <div className="bg-orange-500/10 rounded-xl p-4 text-center col-span-2">
                 <div className="flex items-center justify-center gap-1">
                   <Flame className="w-6 h-6 text-orange-500" />
                   <p className="text-3xl font-bold text-orange-500">{profile?.streak_count || 0}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">Day Streak</p>
-              </div>
-              <div className="bg-green-500/10 rounded-xl p-4 text-center">
-                <div className="flex items-center justify-center gap-1">
-                  <ThumbsUp className="w-6 h-6 text-green-500" />
-                  <p className="text-3xl font-bold text-green-500">{profile?.total_thanks_received || 0}</p>
-                </div>
-                <p className="text-sm text-muted-foreground">Thanks Received</p>
+                <p className="text-sm text-muted-foreground">🔥 Current Streak</p>
               </div>
             </div>
             <div className="mt-4 bg-primary/10 rounded-xl p-4 text-center">
@@ -228,7 +221,7 @@ const Profile = () => {
                 <Calendar className="w-5 h-5 text-primary" />
               </div>
               <p className="text-sm font-medium text-primary mt-1">
-                {profile?.created_at ? format(new Date(profile.created_at), "MMM d, yyyy") : "N/A"}
+                {user?.created_at ? format(new Date(user.created_at), "MMM d, yyyy") : profile?.created_at ? format(new Date(profile.created_at), "MMM d, yyyy") : "N/A"}
               </p>
               <p className="text-sm text-muted-foreground">Joined</p>
             </div>
