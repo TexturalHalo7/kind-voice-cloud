@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, Flame, Heart, MessageCircle, Save, User as UserIcon, ThumbsUp, Sparkles } from "lucide-react";
+import { ArrowLeft, Calendar, Flame, Heart, MessageCircle, Save, User as UserIcon, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { AVATARS, PREMIUM_AVATARS } from "@/lib/avatars";
 import UserAvatar from "@/components/UserAvatar";
