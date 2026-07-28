@@ -1,12 +1,34 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mic, Square, Upload, Music, Tag, RefreshCw } from "lucide-react";
+import { Mic, Square, Upload, Music, Tag, RefreshCw, Lightbulb, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AudioWaveform from "@/components/AudioWaveform";
 import { generateBackgroundMusic, mixAudioFiles, preloadBackgroundAudio, BackgroundSoundType, SOUND_LABELS } from "@/lib/backgroundMusic";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+const PROMPT_IDEAS = [
+  "Tell someone they matter — just as they are.",
+  "Share a small moment of kindness that made your day.",
+  "Remind a stranger that tough seasons don't last forever.",
+  "Say thank you to someone you've never met.",
+  "Send encouragement to someone who is doubting themselves.",
+  "Share one thing you're grateful for right now.",
+  "Tell someone their existence is a gift to the world.",
+  "Offer a gentle reminder to take a deep breath.",
+  "Share a lesson that helped you get through a hard time.",
+  "Simply say: 'I'm proud of you for showing up today.'",
+];
 
 interface AudioRecorderProps {
   userId: string;
@@ -25,6 +47,9 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [mixingAudio, setMixingAudio] = useState(false);
+  const [promptIndex, setPromptIndex] = useState(() => Math.floor(Math.random() * PROMPT_IDEAS.length));
+  const [pledgeOpen, setPledgeOpen] = useState(false);
+  const pendingStartRef = useRef(false);
   const preloadedBgRef = useRef<AudioBuffer | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -35,6 +60,30 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
   const rafIdRef = useRef<number | null>(null);
   const [visualizerData, setVisualizerData] = useState<number[]>([]);
 
+  const PLEDGE_KEY = "vok_pledge_ack";
+
+  const handleMicClick = () => {
+    const ack = typeof window !== "undefined" ? localStorage.getItem(PLEDGE_KEY) : "1";
+    if (!ack) {
+      pendingStartRef.current = true;
+      setPledgeOpen(true);
+      return;
+    }
+    startRecording();
+  };
+
+  const acknowledgePledge = () => {
+    try { localStorage.setItem(PLEDGE_KEY, "1"); } catch {}
+    setPledgeOpen(false);
+    if (pendingStartRef.current) {
+      pendingStartRef.current = false;
+      startRecording();
+    }
+  };
+
+  const nextPrompt = () => {
+    setPromptIndex((i) => (i + 1) % PROMPT_IDEAS.length);
+  };
 
   const startRecording = async () => {
     try {
@@ -293,13 +342,32 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
         
         <div className="flex flex-col items-center gap-4 py-6">
           {!isRecording && !audioBlob && (
-            <Button
-              onClick={startRecording}
-              size="lg"
-              className="w-32 h-32 rounded-full bg-primary hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg"
-            >
-              <Mic className="w-12 h-12 text-primary-foreground" />
-            </Button>
+            <>
+              <div className="w-full rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 p-4 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                    <Lightbulb className="w-4 h-4" />
+                    Need an idea?
+                  </div>
+                  <button
+                    type="button"
+                    onClick={nextPrompt}
+                    className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    New prompt
+                  </button>
+                </div>
+                <p className="text-sm text-foreground/90 italic">"{PROMPT_IDEAS[promptIndex]}"</p>
+              </div>
+              <Button
+                onClick={handleMicClick}
+                size="lg"
+                className="w-32 h-32 rounded-full bg-primary hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg"
+              >
+                <Mic className="w-12 h-12 text-primary-foreground" />
+              </Button>
+            </>
           )}
 
           {isRecording && (
@@ -391,6 +459,29 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
           </p>
         </div>
       </CardContent>
+
+      <AlertDialog open={pledgeOpen} onOpenChange={setPledgeOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Heart className="w-5 h-5 text-primary" fill="currentColor" />
+              Before you begin...
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 pt-2 text-foreground/90">
+                <p>Your voice has the opportunity to change someone's whole day.</p>
+                <p>A few kind words can comfort, encourage, or inspire someone who really needs them.</p>
+                <p className="font-medium text-primary">Thank you for choosing kindness. ❤️</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={acknowledgePledge} className="bg-primary hover:bg-primary/90">
+              I understand
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
