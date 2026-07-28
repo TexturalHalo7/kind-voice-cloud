@@ -303,25 +303,20 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
           )}
 
           {isRecording && (
-            <div className="w-full flex flex-col items-center gap-4">
+            <div className="w-full flex flex-col items-center gap-5">
               <div className="relative">
-                {/* Pulsing recording indicator rings */}
-                <div className="absolute inset-0 rounded-full bg-destructive/60 animate-ping" />
-                <div className="absolute -inset-2 rounded-full border-4 border-destructive/40 animate-pulse" />
-                <div className="absolute -inset-4 rounded-full border-2 border-destructive/20 animate-pulse" style={{ animationDelay: '0.3s' }} />
-                
+                <div className="absolute inset-0 rounded-full bg-destructive/20 blur-xl" />
                 <Button
                   onClick={stopRecording}
                   size="lg"
-                  className="relative w-36 h-36 rounded-full bg-gradient-to-br from-destructive via-destructive/90 to-red-700 hover:scale-105 transition-all duration-300 shadow-[0_0_50px_rgba(239,68,68,0.5)] border-4 border-white/20"
+                  className="relative w-36 h-36 rounded-full bg-destructive hover:bg-destructive/90 hover:scale-105 transition-all duration-300 shadow-lg ring-4 ring-destructive/30 border-4 border-white/20"
                 >
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-t from-white/0 via-white/10 to-white/20" />
                   <Square className="w-12 h-12 drop-shadow-lg relative z-10" />
                 </Button>
               </div>
-              <div className="w-full">
-                <div className="text-xs text-muted-foreground mb-2 text-center">Input level</div>
-                <Progress value={Math.min(100, Math.max(0, Math.round(meterLevel * 100)))} className="h-2 rounded-full" />
+              <div className="w-full space-y-2">
+                <div className="text-xs text-muted-foreground text-center">Recording audio</div>
+                <AudioWaveform data={visualizerData} className="w-full text-primary/80" />
               </div>
             </div>
           )}
