@@ -247,28 +247,25 @@ const RecordForRequestDialog = ({
           )}
 
           {isRecording && (
-            <div className="flex flex-col items-center gap-4 w-full">
+            <div className="flex flex-col items-center gap-5 w-full">
               <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-destructive/60 animate-ping" />
+                <div className="absolute inset-0 rounded-full bg-destructive/20 blur-xl" />
                 <Button
                   onClick={stopRecording}
                   size="lg"
                   variant="destructive"
-                  className="relative w-24 h-24 rounded-full"
+                  className="relative w-24 h-24 rounded-full hover:scale-105 transition-all duration-300 shadow-lg ring-4 ring-destructive/30 border-4 border-white/20"
                 >
                   <Square className="w-10 h-10" />
                 </Button>
               </div>
-              <div className="w-full">
-                <div className="text-xs text-muted-foreground mb-1 text-center">
-                  Input level
+              <div className="w-full space-y-2">
+                <div className="text-xs text-muted-foreground text-center">
+                  Recording audio
                 </div>
-                <Progress
-                  value={Math.min(100, Math.round(meterLevel * 100))}
-                  className="h-2"
-                />
+                <AudioWaveform data={visualizerData} className="w-full text-primary/80" />
               </div>
-              <p className="text-sm text-destructive animate-pulse">
+              <p className="text-sm text-destructive">
                 Recording... Click stop when done
               </p>
             </div>
