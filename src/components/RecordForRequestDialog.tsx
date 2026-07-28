@@ -85,6 +85,7 @@ const RecordForRequestDialog = ({
       mediaRecorder.onstop = () => {
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         setAudioBlob(blob);
+        setVisualizerData([]);
         stream.getTracks().forEach((track) => track.stop());
         if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
         if (audioCtxRef.current) {
