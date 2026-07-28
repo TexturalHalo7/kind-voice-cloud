@@ -28,6 +28,7 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [filterCategory, setFilterCategory] = useState<MessageCategory>("all");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     const a = audioRef.current;
