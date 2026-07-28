@@ -325,8 +325,8 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
             <div className="space-y-5 w-full">
               {mixingAudio ? (
                 <div className="flex flex-col items-center gap-3 py-6">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center animate-pulse">
-                    <Music className="w-8 h-8 text-primary animate-bounce" />
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                    <RefreshCw className="w-8 h-8 text-primary animate-spin" />
                   </div>
                   <div className="text-sm text-muted-foreground">Adding background music...</div>
                 </div>
@@ -358,7 +358,7 @@ const AudioRecorder = ({ userId }: AudioRecorderProps) => {
                 <Button
                   onClick={uploadRecording}
                   disabled={uploading || mixingAudio}
-                  className="flex-1 bg-gradient-to-r from-primary via-accent to-secondary hover:opacity-90 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                  className="flex-1 bg-primary hover:bg-primary/90 rounded-xl shadow-lg hover:shadow-glow transition-all duration-300 hover:scale-[1.02]"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   {uploading ? "Uploading..." : "Share This Message"}
