@@ -214,7 +214,7 @@ const RecordForRequestDialog = ({
   const handleClose = () => {
     setAudioBlob(null);
     setIsRecording(false);
-    setMeterLevel(0);
+    setVisualizerData([]);
     onOpenChange(false);
   };
 
