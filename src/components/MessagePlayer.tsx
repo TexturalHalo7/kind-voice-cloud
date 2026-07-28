@@ -273,6 +273,9 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
                     </div>
                   </div>
                   
+                  {/* Listening waveform */}
+                  <AudioWaveform isPlaying={isPlaying} barCount={16} className="w-full mb-3 text-secondary/80" />
+
                   {/* Audio player */}
                   <div className="bg-background/60 backdrop-blur-sm rounded-xl p-3 border border-border/50">
                     <audio
@@ -290,7 +293,10 @@ const MessagePlayer = ({ userId }: MessagePlayerProps) => {
                           a.muted = false;
                           a.volume = 1;
                         }
+                        setIsPlaying(true);
                       }}
+                      onPause={() => setIsPlaying(false)}
+                      onEnded={() => setIsPlaying(false)}
                       onError={() =>
                         toast.error(
                           "Playback failed. Your browser may not support this audio format. Try a different browser."
