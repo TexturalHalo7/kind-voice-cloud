@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.delete_reported_voice_message() FROM PUBLIC, anon, authenticated;
