@@ -30,6 +30,7 @@ const App = () => (
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/conversations" element={<Conversations />} />
           <Route path="/about" element={<About />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
