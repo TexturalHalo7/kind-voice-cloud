@@ -125,12 +125,21 @@ const Index = () => {
       {/* Footer */}
       <footer className="py-8 text-center text-white/70 text-sm space-y-2">
         <p>Made with ❤️ to spread positivity around the world</p>
-        <button
-          onClick={() => navigate("/about")}
-          className="underline hover:text-white transition-colors"
-        >
-          About Us
-        </button>
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={() => navigate("/about")}
+            className="underline hover:text-white transition-colors"
+          >
+            About Us
+          </button>
+          <span>·</span>
+          <button
+            onClick={() => navigate("/terms")}
+            className="underline hover:text-white transition-colors"
+          >
+            Terms and Conditions
+          </button>
+        </div>
       </footer>
     </div>
   );
