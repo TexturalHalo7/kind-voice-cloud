@@ -69,7 +69,7 @@ const ReportMessageDialog = ({
       toast.error("Failed to submit report");
       return;
     }
-    toast.success("Thanks for letting us know. We'll review this message.");
+    toast.success("Thanks for letting us know. This message has been removed.");
     setOpen(false);
     setReason("");
     setDetails("");
