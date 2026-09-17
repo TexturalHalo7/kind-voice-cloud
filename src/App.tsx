@@ -10,6 +10,7 @@ import Profile from "./pages/Profile";
 import Favorites from "./pages/Favorites";
 import Conversations from "./pages/Conversations";
 import About from "./pages/About";
+import Terms from "./pages/Terms";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
