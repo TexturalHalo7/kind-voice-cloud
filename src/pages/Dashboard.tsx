@@ -297,12 +297,21 @@ const Dashboard = () => {
       {/* Footer */}
       <footer className="py-8 text-center text-white/70 text-sm">
         <p>Made with ❤️ to spread positivity around the world</p>
-        <button
-          onClick={() => navigate("/terms")}
-          className="underline hover:text-white transition-colors"
-        >
-          Terms and Conditions
-        </button>
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={() => navigate("/terms")}
+            className="underline hover:text-white transition-colors"
+          >
+            Terms and Conditions
+          </button>
+          <span>·</span>
+          <button
+            onClick={() => navigate("/privacy")}
+            className="underline hover:text-white transition-colors"
+          >
+            Privacy Policy
+          </button>
+        </div>
       </footer>
     </div>
   );
