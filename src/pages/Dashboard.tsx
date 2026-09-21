@@ -21,7 +21,6 @@ import NotificationBell from "@/components/NotificationBell";
 import VoiceRequestForm from "@/components/VoiceRequestForm";
 import VoiceRequestSuggestions from "@/components/VoiceRequestSuggestions";
 import RecordForRequestDialog from "@/components/RecordForRequestDialog";
-import { usePremium } from "@/hooks/usePremium";
 
 
 interface VoiceRequest {
@@ -35,7 +34,6 @@ interface VoiceRequest {
 const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { premium } = usePremium();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
