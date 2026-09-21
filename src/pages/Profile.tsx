@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { ArrowLeft, Calendar, Flame, Heart, MessageCircle, Save, User as UserIcon, Sparkles } from "lucide-react";
 import { format } from "date-fns";
-import { AVATARS, PREMIUM_AVATARS } from "@/lib/avatars";
+import { AVATARS, EXTRA_AVATARS } from "@/lib/avatars";
 import UserAvatar from "@/components/UserAvatar";
 import MyVoiceMessages from "@/components/MyVoiceMessages";
 import Achievements from "@/components/Achievements";
@@ -150,7 +150,7 @@ const Profile = () => {
                   </p>
                 </div>
                 <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 w-full">
-                  {PREMIUM_AVATARS.map((a) => {
+                  {EXTRA_AVATARS.map((a) => {
                     return (
                       <button
                         key={a.id}

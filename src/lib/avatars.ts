@@ -3,7 +3,6 @@ export interface AvatarOption {
   emoji: string;
   label: string;
   bg: string; // tailwind bg class
-  premium?: boolean;
 }
 
 export const AVATARS: AvatarOption[] = [
@@ -29,25 +28,22 @@ export const AVATARS: AvatarOption[] = [
   { id: "sparkles", emoji: "✨", label: "Sparkles", bg: "bg-yellow-100" },
 ];
 
-export const PREMIUM_AVATARS: AvatarOption[] = [
-  { id: "p_galaxy", emoji: "🌌", label: "Galaxy", bg: "bg-gradient-to-br from-indigo-400 to-purple-600", premium: true },
-  { id: "p_unicorn", emoji: "🦄", label: "Unicorn", bg: "bg-gradient-to-br from-pink-300 to-violet-400", premium: true },
-  { id: "p_dragon", emoji: "🐲", label: "Dragon", bg: "bg-gradient-to-br from-emerald-400 to-teal-600", premium: true },
-  { id: "p_crown", emoji: "👑", label: "Crown", bg: "bg-gradient-to-br from-yellow-300 to-amber-500", premium: true },
-  { id: "p_phoenix", emoji: "🔥", label: "Phoenix", bg: "bg-gradient-to-br from-orange-400 to-red-500", premium: true },
-  { id: "p_diamond", emoji: "💎", label: "Diamond", bg: "bg-gradient-to-br from-cyan-300 to-sky-500", premium: true },
-  { id: "p_wizard", emoji: "🧙", label: "Wizard", bg: "bg-gradient-to-br from-purple-400 to-fuchsia-600", premium: true },
-  { id: "p_rocket", emoji: "🚀", label: "Rocket", bg: "bg-gradient-to-br from-slate-700 to-indigo-800", premium: true },
-  { id: "p_comet", emoji: "☄️", label: "Comet", bg: "bg-gradient-to-br from-blue-400 to-purple-500", premium: true },
-  { id: "p_aurora", emoji: "🌠", label: "Aurora", bg: "bg-gradient-to-br from-teal-300 via-emerald-300 to-purple-400", premium: true },
-  { id: "p_lotus", emoji: "🪷", label: "Lotus", bg: "bg-gradient-to-br from-rose-300 to-pink-500", premium: true },
-  { id: "p_trophy", emoji: "🏆", label: "Trophy", bg: "bg-gradient-to-br from-amber-300 to-yellow-600", premium: true },
+export const EXTRA_AVATARS: AvatarOption[] = [
+  { id: "p_galaxy", emoji: "🌌", label: "Galaxy", bg: "bg-gradient-to-br from-indigo-400 to-purple-600" },
+  { id: "p_unicorn", emoji: "🦄", label: "Unicorn", bg: "bg-gradient-to-br from-pink-300 to-violet-400" },
+  { id: "p_dragon", emoji: "🐲", label: "Dragon", bg: "bg-gradient-to-br from-emerald-400 to-teal-600" },
+  { id: "p_crown", emoji: "👑", label: "Crown", bg: "bg-gradient-to-br from-yellow-300 to-amber-500" },
+  { id: "p_phoenix", emoji: "🔥", label: "Phoenix", bg: "bg-gradient-to-br from-orange-400 to-red-500" },
+  { id: "p_diamond", emoji: "💎", label: "Diamond", bg: "bg-gradient-to-br from-cyan-300 to-sky-500" },
+  { id: "p_wizard", emoji: "🧙", label: "Wizard", bg: "bg-gradient-to-br from-purple-400 to-fuchsia-600" },
+  { id: "p_rocket", emoji: "🚀", label: "Rocket", bg: "bg-gradient-to-br from-slate-700 to-indigo-800" },
+  { id: "p_comet", emoji: "☄️", label: "Comet", bg: "bg-gradient-to-br from-blue-400 to-purple-500" },
+  { id: "p_aurora", emoji: "🌠", label: "Aurora", bg: "bg-gradient-to-br from-teal-300 via-emerald-300 to-purple-400" },
+  { id: "p_lotus", emoji: "🪷", label: "Lotus", bg: "bg-gradient-to-br from-rose-300 to-pink-500" },
+  { id: "p_trophy", emoji: "🏆", label: "Trophy", bg: "bg-gradient-to-br from-amber-300 to-yellow-600" },
 ];
 
-export const ALL_AVATARS: AvatarOption[] = [...AVATARS, ...PREMIUM_AVATARS];
+export const ALL_AVATARS: AvatarOption[] = [...AVATARS, ...EXTRA_AVATARS];
 
 export const getAvatar = (id?: string | null): AvatarOption =>
   ALL_AVATARS.find((a) => a.id === id) || ALL_AVATARS[0];
-
-export const isPremiumAvatar = (id?: string | null): boolean =>
-  !!PREMIUM_AVATARS.find((a) => a.id === id);

@@ -139,6 +139,13 @@ const Index = () => {
           >
             Terms and Conditions
           </button>
+          <span>·</span>
+          <button
+            onClick={() => navigate("/privacy")}
+            className="underline hover:text-white transition-colors"
+          >
+            Privacy Policy
+          </button>
         </div>
       </footer>
     </div>
