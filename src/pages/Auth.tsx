@@ -236,6 +236,12 @@ const Auth = () => {
                 >
                   {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
                 </button>
+                <p className="text-xs text-muted-foreground text-center">
+                  By creating an account you agree to our{" "}
+                  <a href="/terms" className="underline hover:text-primary">Terms and Conditions</a>{" "}
+                  and{" "}
+                  <a href="/privacy" className="underline hover:text-primary">Privacy Policy</a>.
+                </p>
               </div>
             </form>
           </CardContent>
